@@ -1,12 +1,15 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
+import { mockAuth } from './middleware/mockAuth';
 import { query } from './config/db';
 import bookingRoutes from './routes/bookingRoutes';
+import slotRoutes from "./routes/slotRoutes";
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(mockAuth);
 
 app.get('/health', async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -22,6 +25,7 @@ app.get('/health', async (req: Request, res: Response, next: NextFunction) => {
 });
 
 app.use('/api/bookings', bookingRoutes); 
+app.use("/api/slots", slotRoutes);
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error('Error:', err);
