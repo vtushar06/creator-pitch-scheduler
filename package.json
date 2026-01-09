@@ -1,0 +1,16 @@
+{
+  "name": "creator-pitch-scheduler",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "db:up": "docker-compose up -d",
+    "db:down": "docker-compose down"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
