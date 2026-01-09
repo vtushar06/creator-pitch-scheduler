@@ -1,15 +1,15 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
-import { mockAuth } from './middleware/mockAuth';
 import { query } from './config/db';
 import bookingRoutes from './routes/bookingRoutes';
 import slotRoutes from "./routes/slotRoutes";
+import authRoutes from './routes/authRoutes';
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use(mockAuth);
+// Removed mockAuth - using real JWT authentication now
 
 app.get('/health', async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -24,6 +24,7 @@ app.get('/health', async (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
+app.use('/api/auth', authRoutes);
 app.use('/api/bookings', bookingRoutes); 
 app.use("/api/slots", slotRoutes);
 
