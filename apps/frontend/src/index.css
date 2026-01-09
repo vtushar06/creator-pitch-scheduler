@@ -1,0 +1,40 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+/* Note: Slussen Extended is a premium font. Using system fallback or add via font files */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-void text-white;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+}
+
+@layer utilities {
+  .text-cosmic {
+    @apply bg-gradient-to-r from-white via-mugafiPink to-mugafiRed bg-clip-text text-transparent;
+  }
+  
+  /* Mugafi Header Style */
+  .main-tab {
+    font-family: 'Slussen Extended', 'Inter', sans-serif;
+    font-weight: 600;
+    color: #D4C3C3;
+    line-height: 1.25;
+    overflow-wrap: break-word;
+    user-select: none;
+    cursor: pointer;
+  }
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
