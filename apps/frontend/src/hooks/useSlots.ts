@@ -14,11 +14,6 @@ export interface Slot {
   booked_by_user_id?: number; // User ID who made the booking
 }
 
-interface SlotsResponse {
-  status: string;
-  data: Slot[];
-}
-
 const fetchSlots = async (date: string | null): Promise<Slot[]> => {
   // 1. Handle the "null" date case (default to today if missing, or handle logic)
   const queryParams = new URLSearchParams();
