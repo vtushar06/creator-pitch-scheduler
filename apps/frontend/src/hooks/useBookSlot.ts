@@ -39,14 +39,11 @@ export const useBookSlot = () => {
       // Snapshot previous value
       const previousSlots = queryClient.getQueryData<Slot[]>(queryKey);
 
-      // Optimistically update cache
+      // Optimistically remove the slot from the list since we only show AVAILABLE slots
       queryClient.setQueryData<Slot[]>(queryKey, (old: Slot[] | undefined) => {
         if (!old) return old;
-        return old.map((slot: Slot) =>
-          slot.id === variables.slotId
-            ? { ...slot, status: 'BOOKED' as const }
-            : slot
-        );
+        // Remove the booked slot from the list
+        return old.filter((slot: Slot) => slot.id !== variables.slotId);
       });
 
       return { previousSlots, queryKey };
@@ -67,8 +64,15 @@ export const useBookSlot = () => {
     },
 
     onSuccess: (data: BookSlotResponse) => {
-      // Invalidate my-bookings for right rail sidebar sync
+      // Invalidate all relevant queries for cross-panel sync
+      queryClient.invalidateQueries({ queryKey: ['myBookings'] });
       queryClient.invalidateQueries({ queryKey: ['my-bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['slots'] });
+      queryClient.invalidateQueries({ queryKey: ['adminSlots'] });
+      
+      // Force immediate refetch to remove booked slot from dashboard
+      queryClient.refetchQueries({ queryKey: ['slots'] });
+      queryClient.refetchQueries({ queryKey: ['myBookings'] });
       
       if (data.message?.includes('idempotent')) {
         toast.success('Booking confirmed (duplicate request)');
