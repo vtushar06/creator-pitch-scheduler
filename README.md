@@ -187,13 +187,6 @@ Run the concurrency stress test:
 node scripts/test-concurrency.js
 ```
 
-**Expected output:**
-```
-✅ Successful bookings (201): 1
-⚠️  Conflicts (409): 19
-✅ PASS: Pessimistic Locking is working correctly!
-```
-
 ## 📁 Project Structure
 
 ```
