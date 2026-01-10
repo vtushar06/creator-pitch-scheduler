@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
+// Configure axios baseURL from environment variable
+axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 interface User {
   id: number;
   name: string;
