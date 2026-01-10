@@ -58,7 +58,7 @@ export const createSlot = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { startTime, endTime } = req.body;
+  const { startTime, endTime, mentorId } = req.body;
   const adminId = req.user?.userId; // Get from JWT token
   const client = await getClient();
 
@@ -69,12 +69,36 @@ export const createSlot = async (
     });
   }
 
+  if (!mentorId) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Mentor selection is required'
+    });
+  }
+
   try {
+    // Check if mentor is already assigned to overlapping slot
+    const overlapCheck = await client.query(
+      `SELECT id FROM slots 
+       WHERE admin_id = $1 
+       AND mentor_id = $2
+       AND status != 'CANCELLED'
+       AND tstzrange(start_time, end_time) && tstzrange($3::timestamptz, $4::timestamptz)`,
+      [adminId, mentorId, startTime, endTime]
+    );
+
+    if (overlapCheck.rows.length > 0) {
+      return res.status(409).json({
+        status: "error",
+        message: "This mentor is already assigned to an overlapping time slot",
+      });
+    }
+
     const result = await client.query(
-      `INSERT INTO slots (admin_id, start_time, end_time, status)
-       VALUES ($1, $2, $3, 'AVAILABLE')
+      `INSERT INTO slots (admin_id, mentor_id, start_time, end_time, status)
+       VALUES ($1, $2, $3, $4, 'AVAILABLE')
        RETURNING *`,
-      [adminId, startTime, endTime]
+      [adminId, mentorId, startTime, endTime]
     );
 
     res.status(201).json({
