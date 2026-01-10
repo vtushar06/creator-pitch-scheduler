@@ -4,8 +4,8 @@ import { authenticateToken, requireAdmin } from "../middleware/authMiddleware";
 
 const router = Router();
 
-// Public route - anyone can view available slots
-router.get("/", getSlots);
+// Protected route - authenticated users can view slots (filtered by role)
+router.get("/", authenticateToken, getSlots);
 
 // Protected route - only admins can create slots
 router.post("/", authenticateToken, requireAdmin, createSlot);

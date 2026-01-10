@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useUrlFilters } from "./useUrlFilters";
+import axios from "axios";
 
 // Define the shape of a Slot based on your DB schema
 export interface Slot {
@@ -7,6 +8,7 @@ export interface Slot {
   start_time: string;
   end_time: string;
   status: "AVAILABLE" | "BOOKED" | "CANCELLED";
+  mentor_id: number; // Mentor assigned to this slot
   mentor_name: string; // We joined with users table in the backend
   booking_id?: number; // Added for cancellation tracking
   booked_by_user_id?: number; // User ID who made the booking
@@ -24,19 +26,11 @@ const fetchSlots = async (date: string | null): Promise<Slot[]> => {
     queryParams.append("date", date);
   }
 
-  // 2. Fetch from the proxy
-  const response = await fetch(`/api/slots?${queryParams.toString()}`);
+  // 2. Fetch using axios (which includes Authorization header)
+  const response = await axios.get(`/api/slots?${queryParams.toString()}`);
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch slots");
-  }
-
-  // 3. Parse JSON
-  const json: SlotsResponse = await response.json();
-
-  // 4. CRITICAL: Return the actual array.
-  // If json.data is undefined, return an empty array to prevent the "undefined" error.
-  return json.data || [];
+  // 3. Return the actual array
+  return response.data.data || [];
 };
 
 export const useSlots = () => {
