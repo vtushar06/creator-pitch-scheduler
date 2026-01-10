@@ -3,11 +3,12 @@ import { getClient } from "../config/db";
 
 // GET /api/slots?date=2026-01-20
 export const getSlots = async (
-  req: Request,
+  req: any,
   res: Response,
   next: NextFunction
 ) => {
   const { date } = req.query;
+  const userRole = req.user?.role; // Get user role from JWT
   const client = await getClient();
 
   try {
@@ -17,6 +18,7 @@ export const getSlots = async (
         s.start_time, 
         s.end_time, 
         s.status,
+        s.mentor_id,
         u.name as mentor_name,
         b.id as booking_id,
         b.user_id as booked_by_user_id,
@@ -24,17 +26,29 @@ export const getSlots = async (
         u2.email as booked_by_email
       FROM slots s
       JOIN users u ON s.admin_id = u.id
-      LEFT JOIN bookings b ON s.id = b.slot_id AND b.status = 'ACTIVE'
+      LEFT JOIN bookings b ON s.id = b.slot_id AND b.status = 'BOOKED'
       LEFT JOIN users u2 ON b.user_id = u2.id
-      WHERE s.status != 'CANCELLED'
     `;
 
     const params: any[] = [];
+    const whereClauses: string[] = [];
+
+    // Filter by status: ADMIN sees all slots, CUSTOMER sees only AVAILABLE and not CANCELLED
+    if (userRole !== 'ADMIN') {
+      whereClauses.push(`s.status = 'AVAILABLE'`);
+    } else {
+      // Admin sees AVAILABLE and BOOKED, but not CANCELLED
+      whereClauses.push(`s.status IN ('AVAILABLE', 'BOOKED')`);
+    }
 
     // Filter by Date (Senior implementation: Handles Timezones correctly)
     if (date) {
-      query += ` AND s.start_time::date = $1`;
+      whereClauses.push(`s.start_time::date = $${params.length + 1}`);
       params.push(date);
+    }
+
+    if (whereClauses.length > 0) {
+      query += ` WHERE ${whereClauses.join(' AND ')}`;
     }
 
     query += ` ORDER BY s.start_time ASC`;
@@ -141,13 +155,9 @@ export const deleteSlot = async (
   try {
     await client.query("BEGIN");
 
-    // 1. Fetch slot details with booking info
+    // 1. Fetch and lock the slot first
     const slotResult = await client.query(
-      `SELECT s.*, b.id as booking_id, b.user_id, u.name as booked_by_name, u.email as booked_by_email
-       FROM slots s
-       LEFT JOIN bookings b ON s.id = b.slot_id AND b.status = 'ACTIVE'
-       LEFT JOIN users u ON b.user_id = u.id
-       WHERE s.id = $1 FOR UPDATE`,
+      `SELECT * FROM slots WHERE id = $1 FOR UPDATE`,
       [slotId]
     );
 
@@ -161,21 +171,37 @@ export const deleteSlot = async (
 
     const slot = slotResult.rows[0];
 
-    // 2. If slot is BOOKED, cancel the booking and send notification (mocked)
-    if (slot.status === 'BOOKED' && slot.booking_id) {
+    // 2. Fetch booking info separately if slot is booked
+    let bookingInfo = null;
+    if (slot.status === 'BOOKED') {
+      const bookingResult = await client.query(
+        `SELECT b.id as booking_id, b.user_id, u.name as booked_by_name, u.email as booked_by_email
+         FROM bookings b
+         JOIN users u ON b.user_id = u.id
+         WHERE b.slot_id = $1 AND b.status = 'ACTIVE'`,
+        [slotId]
+      );
+      
+      if (bookingResult.rows.length > 0) {
+        bookingInfo = bookingResult.rows[0];
+      }
+    }
+
+    // 3. If slot is BOOKED, cancel the booking and send notification (mocked)
+    if (slot.status === 'BOOKED' && bookingInfo) {
       // Cancel the booking
       await client.query(
         `UPDATE bookings SET status = 'CANCELLED', cancelled_at = NOW() WHERE id = $1`,
-        [slot.booking_id]
+        [bookingInfo.booking_id]
       );
 
       // Mock notification/email
-      console.log(`📧 [MOCK EMAIL] Slot cancelled notification sent to ${slot.booked_by_email}`);
-      console.log(`   User: ${slot.booked_by_name}`);
+      console.log(`📧 [MOCK EMAIL] Slot cancelled notification sent to ${bookingInfo.booked_by_email}`);
+      console.log(`   User: ${bookingInfo.booked_by_name}`);
       console.log(`   Slot: ${slot.start_time} - ${slot.end_time}`);
     }
 
-    // 3. Update slot status to CANCELLED
+    // 4. Update slot status to CANCELLED
     await client.query(
       `UPDATE slots SET status = 'CANCELLED' WHERE id = $1`,
       [slotId]
@@ -185,13 +211,13 @@ export const deleteSlot = async (
 
     res.json({
       status: "success",
-      message: slot.status === 'BOOKED' 
-        ? `Slot cancelled and notification sent to ${slot.booked_by_name}`
+      message: slot.status === 'BOOKED' && bookingInfo
+        ? `Slot cancelled and notification sent to ${bookingInfo.booked_by_name}`
         : 'Slot cancelled successfully',
       data: {
         slotId,
         wasBooked: slot.status === 'BOOKED',
-        bookedBy: slot.booked_by_name,
+        bookedBy: bookingInfo?.booked_by_name,
       }
     });
   } catch (error: any) {
