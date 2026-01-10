@@ -58,6 +58,26 @@ export const createBooking = async (
       });
     }
 
+    // 3.5. Check if user already has an overlapping booking
+    const userOverlapCheck = await client.query(
+      `SELECT b.id 
+       FROM bookings b 
+       JOIN slots s ON b.slot_id = s.id 
+       WHERE b.user_id = $1 
+       AND b.status = 'BOOKED' 
+       AND s.status = 'BOOKED'
+       AND tstzrange(s.start_time, s.end_time) && tstzrange($2::timestamptz, $3::timestamptz)`,
+      [userId, slot.start_time, slot.end_time]
+    );
+
+    if (userOverlapCheck.rows.length > 0) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({
+        status: "error",
+        message: "You already have a booking at this time. Please choose a different time slot.",
+      });
+    }
+
     // 4. Create Booking
     const bookingResult = await client.query(
       `INSERT INTO bookings (slot_id, user_id, idempotency_key, status, created_at)
@@ -237,16 +257,17 @@ export const getMyBookings = async (
         b.id,
         b.slot_id,
         b.user_id,
-        b.status,
+        b.status as booking_status,
         b.created_at,
+        b.cancelled_at,
         s.start_time,
         s.end_time,
-        u.name as mentor_name
+        s.status as slot_status,
+        s.mentor_id
       FROM bookings b
       JOIN slots s ON b.slot_id = s.id
-      JOIN users u ON s.admin_id = u.id
-      WHERE b.user_id = $1 AND b.status = 'ACTIVE'
-      ORDER BY s.start_time ASC`,
+      WHERE b.user_id = $1 AND b.status IN ('BOOKED', 'CANCELLED')
+      ORDER BY s.start_time DESC`,
       [userId]
     );
 
@@ -255,6 +276,7 @@ export const getMyBookings = async (
       data: result.rows,
     });
   } catch (error) {
+    console.error('❌ Error in getMyBookings:', error);
     next(error);
   } finally {
     client.release();
