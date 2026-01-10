@@ -1,10 +1,12 @@
 import { Router } from 'express';
-import { createBooking } from '../controllers/bookingController';
-import { createSlot } from '../controllers/slotController';
+import { createBooking, cancelBooking, getMyBookings } from '../controllers/bookingController';
+import { authenticateToken } from '../middleware/authMiddleware';
 
 const router = Router();
 
-router.post('/', createBooking);
-router.post("/", createSlot);
+// All booking routes require authentication
+router.get('/me', authenticateToken, getMyBookings);
+router.post('/', authenticateToken, createBooking);
+router.patch('/:id/cancel', authenticateToken, cancelBooking);
 
 export default router;
