@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { LoginPage } from './pages/LoginPage';
 import { SlotsPage } from './pages/SlotsPage';
 import { AdminDashboard } from './pages/AdminDashboard';
+import MyBookingsPage from './pages/MyBookingsPage';
 
 const ProtectedRoute = ({ 
   children, 
@@ -59,6 +60,15 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <SlotsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/my-bookings"
+        element={
+          <ProtectedRoute>
+            <MyBookingsPage />
           </ProtectedRoute>
         }
       />

@@ -5,11 +5,13 @@ interface Booking {
   id: number;
   slot_id: number;
   user_id: number;
-  status: string;
+  booking_status: string;
+  slot_status: string;
   created_at: string;
+  cancelled_at: string | null;
   start_time: string;
   end_time: string;
-  mentor_name: string;
+  mentor_id: number;
 }
 
 interface MyBookingsResponse {
@@ -19,6 +21,8 @@ interface MyBookingsResponse {
 
 const fetchMyBookings = async (): Promise<Booking[]> => {
   const { data } = await axios.get<MyBookingsResponse>('/api/bookings/me');
+  console.log('📅 My Bookings Response:', data);
+  console.log('📅 My Bookings Data:', data.data);
   return data.data;
 };
 
