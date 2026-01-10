@@ -3,13 +3,16 @@ import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { CosmicBackground } from '../components/CosmicBackground';
+import { MENTORS } from '../data/mentors';
 
 interface SlotWithBooking {
   id: number;
   start_time: string;
   end_time: string;
   status: 'AVAILABLE' | 'BOOKED' | 'CANCELLED';
+  mentor_id: number;
   booking_id?: number;
   booked_by_name?: string;
   booked_by_email?: string;
@@ -27,7 +30,9 @@ export const AdminDashboard = () => {
     date: new Date().toISOString().split('T')[0],
     startTime: '09:00',
     endTime: '10:00',
+    mentorId: 1,
   });
+  const [selectedMentorFilter, setSelectedMentorFilter] = useState<number | null>(null);
 
   // Stats calculations
   const stats = useMemo(() => {
@@ -39,17 +44,26 @@ export const AdminDashboard = () => {
     return { total, booked, available, bookedPercentage };
   }, [slots]);
 
+  // Filter slots by selected mentor
+  const filteredSlots = useMemo(() => {
+    if (selectedMentorFilter === null) return slots;
+    return slots.filter(s => s.mentor_id === selectedMentorFilter);
+  }, [slots, selectedMentorFilter]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      const startDateTime = `${formData.date} ${formData.startTime}:00`;
-      const endDateTime = `${formData.date} ${formData.endTime}:00`;
-
+      // Create Date objects in local timezone and convert to ISO string
+      const startDate = new Date(`${formData.date}T${formData.startTime}:00`);
+      const endDate = new Date(`${formData.date}T${formData.endTime}:00`);
+      
+      // Send as ISO strings which preserve timezone
       await axios.post('/api/slots', {
-        startTime: startDateTime,
-        endTime: endDateTime,
+        startTime: startDate.toISOString(),
+        endTime: endDate.toISOString(),
+        mentorId: formData.mentorId,
       });
 
       toast.success('Slot published successfully!');
@@ -95,6 +109,11 @@ export const AdminDashboard = () => {
   useEffect(() => {
     fetchSlots(formData.date);
   }, [formData.date]);
+
+  // Set initial mentor filter to match form selection
+  useEffect(() => {
+    setSelectedMentorFilter(formData.mentorId);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -191,6 +210,51 @@ export const AdminDashboard = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Mentor Selection */}
+              <div>
+                <label className="block text-sm font-bold text-white/80 mb-3 tracking-wide uppercase">
+                  Select Mentor
+                </label>
+                <div className="relative">
+                  {/* Scroll Indicator Animation */}
+                  <div className="absolute -right-1 top-2 z-10 flex flex-col items-center animate-bounce">
+                    <svg className="w-5 h-5 text-mugafiRed opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                    <div className="w-0.5 h-8 bg-gradient-to-b from-mugafiRed to-transparent mt-1"></div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-2 scroll-smooth">
+                  {MENTORS.map((mentor) => {
+                    return (
+                      <button
+                        key={mentor.id}
+                        type="button"
+                        onClick={() => {
+                          setFormData({ ...formData, mentorId: mentor.id });
+                          setSelectedMentorFilter(mentor.id);
+                        }}
+                        className={`relative p-3 rounded-xl border-2 transition-all ${
+                          formData.mentorId === mentor.id
+                            ? 'border-mugafiRed bg-mugafiRed/20 shadow-lg shadow-mugafiRed/30'
+                            : 'border-white/20 bg-void/80 hover:border-mugafiRed/50 hover:bg-mugafiRed/10'
+                        }`}
+                      >
+                        <div className="aspect-square rounded-lg overflow-hidden mb-2">
+                          <img 
+                            src={mentor.image} 
+                            alt={mentor.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <p className="text-xs font-bold text-white truncate">{mentor.name}</p>
+                        <p className="text-[10px] text-white/50 font-medium truncate">{mentor.role}</p>
+                      </button>
+                    );
+                  })}
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <label htmlFor="date" className="block text-sm font-bold text-white/80 mb-3 tracking-wide uppercase">
                   Date
@@ -250,27 +314,103 @@ export const AdminDashboard = () => {
 
           {/* Slots List */}
           <div className="bg-void/50 backdrop-blur-xl rounded-2xl border border-white/10 p-8 shadow-2xl">
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h2 className="text-2xl font-black text-white tracking-tighter">
-                  ALL SLOTS
-                </h2>
-                <p className="text-white/60 text-sm mt-2 font-medium">
-                  {new Date(formData.date).toLocaleDateString('en-US', { 
-                    weekday: 'long', 
-                    month: 'long', 
-                    day: 'numeric',
-                  })}
-                </p>
+            {/* Date Navigation Header */}
+            <div className="mb-6">
+              <h2 className="text-2xl font-black text-white tracking-tighter mb-4">
+                ALL SLOTS
+              </h2>
+
+              {/* Mentor Filter Pills */}
+              {selectedMentorFilter && (() => {
+                const selectedMentor = MENTORS.find(m => m.id === selectedMentorFilter);
+                const mentorSlots = slots.filter(s => s.mentor_id === selectedMentorFilter);
+                
+                return (
+                  <div className="mb-4 flex items-center gap-2 flex-wrap">
+                    <span className="text-xs text-white/60 font-bold uppercase tracking-wider">Filter by Mentor:</span>
+                    <div className="flex gap-2 flex-wrap">
+                      <div className="px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-mugafiRed to-mugafiPink text-white shadow-lg shadow-mugafiRed/30 flex items-center gap-2">
+                        <div className="w-5 h-5 rounded-full overflow-hidden border border-white/20">
+                          <img src={selectedMentor?.image} alt={selectedMentor?.name} className="w-full h-full object-cover" />
+                        </div>
+                        {selectedMentor?.name.split(' ')[0]}
+                        <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black bg-white/20">
+                          {mentorSlots.length}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+              
+              {/* Date Picker with Navigation */}
+              <div className="flex items-center justify-between gap-3">
+                <button
+                  onClick={() => {
+                    const date = new Date(formData.date);
+                    date.setDate(date.getDate() - 1);
+                    const newDate = date.toISOString().split('T')[0];
+                    setFormData({ ...formData, date: newDate });
+                  }}
+                  className="p-3 bg-void/80 border border-white/20 rounded-xl text-white/60 hover:text-mugafiRed hover:border-mugafiRed/50 hover:bg-mugafiRed/10 transition-all"
+                  title="Previous Day"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+
+                <div className="flex-1 flex items-center gap-3">
+                  <input
+                    type="date"
+                    value={formData.date}
+                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    className="flex-1 px-4 py-3 bg-void/80 border border-white/20 rounded-xl text-white font-bold focus:outline-none focus:ring-2 focus:ring-mugafiRed/50 focus:border-transparent transition-all"
+                  />
+                  
+                  <button
+                    onClick={() => setFormData({ ...formData, date: new Date().toISOString().split('T')[0] })}
+                    className="px-4 py-3 bg-void/80 border border-white/20 rounded-xl text-white/80 font-bold hover:text-mugafiRed hover:border-mugafiRed/50 hover:bg-mugafiRed/10 transition-all whitespace-nowrap"
+                  >
+                    TODAY
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => {
+                    const date = new Date(formData.date);
+                    date.setDate(date.getDate() + 1);
+                    const newDate = date.toISOString().split('T')[0];
+                    setFormData({ ...formData, date: newDate });
+                  }}
+                  className="p-3 bg-void/80 border border-white/20 rounded-xl text-white/60 hover:text-mugafiRed hover:border-mugafiRed/50 hover:bg-mugafiRed/10 transition-all"
+                  title="Next Day"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+
+                <button
+                  onClick={() => fetchSlots(formData.date)}
+                  className="p-3 bg-void/80 border border-white/20 rounded-xl text-white/60 hover:text-white hover:border-mugafiRed/50 hover:bg-mugafiRed/10 transition-all"
+                  title="Refresh"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </button>
               </div>
-              <button
-                onClick={() => fetchSlots(formData.date)}
-                className="p-3 bg-void/80 border border-white/20 rounded-lg text-white/60 hover:text-white hover:border-mugafiRed/50 hover:bg-mugafiRed/10 transition-all"
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-              </button>
+
+              {/* Current Date Display */}
+              <p className="text-white/60 text-sm mt-3 font-medium text-center">
+                {new Date(formData.date).toLocaleDateString('en-US', { 
+                  weekday: 'long', 
+                  month: 'long', 
+                  day: 'numeric',
+                  year: 'numeric'
+                })}
+              </p>
             </div>
 
             {isLoadingSlots ? (
@@ -278,21 +418,34 @@ export const AdminDashboard = () => {
                 <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-mugafiRed"></div>
                 <p className="text-white/50 text-sm mt-4 font-medium">Loading slots...</p>
               </div>
-            ) : slots.length === 0 ? (
+            ) : filteredSlots.length === 0 ? (
               <div className="text-center py-12">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-void/80 border border-white/10 flex items-center justify-center">
                   <svg className="w-8 h-8 text-white/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                 </div>
-                <p className="text-white/50 font-bold">No slots created yet</p>
-                <p className="text-white/30 text-sm mt-1 font-medium">Create your first slot</p>
+                <p className="text-white/50 font-bold">{selectedMentorFilter ? 'No slots for this mentor' : 'No slots created yet'}</p>
+                <p className="text-white/30 text-sm mt-1 font-medium">{selectedMentorFilter ? 'Try selecting a different mentor' : 'Create your first slot'}</p>
               </div>
             ) : (
-              <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
-                {slots.map((slot) => (
-                  <div
+              <div className="relative">
+                {/* Scroll Indicator for Slots List */}
+                {filteredSlots.length > 5 && (
+                  <div className="absolute -right-1 top-4 z-10 flex flex-col items-center animate-bounce">
+                    <svg className="w-5 h-5 text-mugafiPink opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                    <div className="w-0.5 h-8 bg-gradient-to-b from-mugafiPink to-transparent mt-1"></div>
+                  </div>
+                )}
+                <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2 scroll-smooth">
+                  {filteredSlots.map((slot, index) => (
+                  <motion.div
                     key={slot.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
                     className={`p-5 rounded-xl border transition-all ${
                       slot.status === 'BOOKED'
                         ? 'bg-mugafiRed/10 border-mugafiRed/30'
@@ -306,13 +459,15 @@ export const AdminDashboard = () => {
                         <div className="flex items-center space-x-3 mb-2">
                           <span className="text-base font-bold text-white">
                             {new Date(slot.start_time).toLocaleTimeString('en-US', {
-                              hour: '2-digit',
+                              hour: 'numeric',
                               minute: '2-digit',
+                              hour12: true,
                             })}
                             {' - '}
                             {new Date(slot.end_time).toLocaleTimeString('en-US', {
-                              hour: '2-digit',
+                              hour: 'numeric',
                               minute: '2-digit',
+                              hour12: true,
                             })}
                           </span>
                           <span
@@ -359,8 +514,9 @@ export const AdminDashboard = () => {
                         </svg>
                       </button>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
+                </div>
               </div>
             )}
           </div>

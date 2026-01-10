@@ -3,31 +3,19 @@ import { Slot } from '../hooks/useSlots';
 import { useBookSlot } from '../hooks/useBookSlot';
 import { useCancelBooking } from '../hooks/useCancelBooking';
 import { useAuth } from '../context/AuthContext';
+import { MENTORS } from '../data/mentors';
 
 interface SlotCardProps {
   slot: Slot;
 }
-
-// Ghibli-themed mentors for the Creative Studio
-const GHIBLI_MENTORS = [
-  { name: 'Hayao Miyazaki', role: 'Animation Director' },
-  { name: 'Isao Takahata', role: 'Film Director' },
-  { name: 'Toshio Suzuki', role: 'Producer' },
-  { name: 'Joe Hisaishi', role: 'Composer' },
-  { name: 'Hiromasa Yonebayashi', role: 'Animation Director' },
-  { name: 'Goro Miyazaki', role: 'Director' },
-];
 
 export const SlotCard: React.FC<SlotCardProps> = ({ slot }: SlotCardProps) => {
   const { user } = useAuth();
   const { mutate: bookSlot, isPending: isBooking } = useBookSlot();
   const { mutate: cancelBooking, isPending: isCancelling } = useCancelBooking();
 
-  // Use slot ID as seed for consistent mentor assignment
-  const mentorIndex = slot.id % GHIBLI_MENTORS.length;
-  const ghibliMentor = GHIBLI_MENTORS[mentorIndex];
-  const displayName = slot.mentor_name || ghibliMentor.name;
-  const displayRole = ghibliMentor.role;
+  // Get mentor data from MENTORS array
+  const mentor = MENTORS.find(m => m.id === slot.mentor_id) || MENTORS[0];
 
   const formatTime = (datetime: string) => {
     return new Date(datetime).toLocaleTimeString('en-US', {
@@ -59,14 +47,59 @@ export const SlotCard: React.FC<SlotCardProps> = ({ slot }: SlotCardProps) => {
   const isOwnBooking = isBooked && slot.booking_id && slot.booked_by_user_id === user?.id;
 
   return (
-    <div className="group rounded-2xl border border-white/10 bg-zinc-900/40 backdrop-blur-md p-6 transition-all duration-500 hover:-translate-y-2 hover:border-mugafiRed hover:shadow-2xl hover:shadow-mugafiRed/30">
-      {/* Header: Time and Status Badge */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex-1">
-          <h3 className="text-xl font-bold text-white tracking-tighter">
+    <div className="group relative rounded-2xl overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-mugafiRed/30">
+      {/* Cinematic Mentor Hero Section */}
+      <div className="relative h-56 overflow-hidden">
+        {/* Mentor Portrait Background */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center scale-105 transition-transform duration-700 group-hover:scale-110"
+          style={{ backgroundImage: `url(${mentor.image})` }}
+        />
+        
+        {/* Cosmic Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-void via-void/90 to-transparent" />
+        
+        {/* Mentor Info Overlay */}
+        <div className="absolute bottom-0 left-0 right-0 p-5">
+          <div className="flex items-end justify-between">
+            <div>
+              <div className="text-mugafiPink/90 text-xs font-bold uppercase tracking-widest mb-1">
+                {mentor.role}
+              </div>
+              <div className="text-white text-2xl font-bold tracking-tight">
+                {mentor.name}
+              </div>
+              <div className="text-mugafiCream/70 text-xs mt-1 font-medium">
+                {mentor.specialty}
+              </div>
+            </div>
+            
+            {/* Status Badge - Moved to hero */}
+            {isOwnBooking && (
+              <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-mugafiRed/30 text-mugafiPink border border-mugafiRed/50 backdrop-blur-md animate-pulse-slow">
+                YOUR BOOKING
+              </span>
+            )}
+            {isBooked && !isOwnBooking && (
+              <span className="px-3 py-1.5 rounded-full text-xs font-bold text-white/40 border border-white/20 backdrop-blur-md">
+                UNAVAILABLE
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Cosmic Accent Line */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-mugafiRed to-transparent opacity-60" />
+      </div>
+
+      {/* Card Content */}
+      <div className="bg-zinc-900/80 backdrop-blur-md border-x border-b border-white/10 group-hover:border-mugafiRed/30 transition-colors p-6">
+        {/* Time Display */}
+        <div className="mb-6">
+          <h3 className="text-2xl font-bold text-white tracking-tighter mb-1">
             {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
           </h3>
-          <p className="text-xs text-white/40 mt-1 font-medium">
+          <p className="text-xs text-white/40 font-medium">
             {new Date(slot.start_time).toLocaleDateString('en-US', {
               weekday: 'short',
               month: 'short',
@@ -74,35 +107,6 @@ export const SlotCard: React.FC<SlotCardProps> = ({ slot }: SlotCardProps) => {
             })}
           </p>
         </div>
-
-        {/* Status Badge */}
-        {isOwnBooking && (
-          <span className="px-3 py-1 rounded-full text-xs font-bold bg-mugafiRed/20 text-mugafiPink border border-mugafiRed/30 animate-pulse-slow">
-            YOUR BOOKING
-          </span>
-        )}
-        {isBooked && !isOwnBooking && (
-          <span className="px-3 py-1 rounded-full text-xs font-bold text-white/30 border border-white/10">
-            UNAVAILABLE
-          </span>
-        )}
-      </div>
-
-      {/* Mentor Info - Ghibli Themed */}
-      <div className="mb-6 flex items-center space-x-3">
-        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-mugafiRed to-mugafiPink flex items-center justify-center shadow-lg shadow-mugafiRed/20">
-          <span className="text-white font-black text-base">
-            {displayName.charAt(0).toUpperCase()}
-          </span>
-        </div>
-        <div>
-          <p className="text-sm text-white font-bold">{displayName}</p>
-          <p className="text-xs text-mugafiPink/80 font-semibold uppercase tracking-wide">{displayRole}</p>
-        </div>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="mt-6">
         {/* Book Button (Available) */}
         {isAvailable && (
           <button

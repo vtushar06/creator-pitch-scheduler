@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { CosmicBackground } from '../components/CosmicBackground';
-import logoWhite from '../website_logo_white.webp';
+import logoWhite from '../images/website_logo_white.webp';
 
 export const LoginPage = () => {
   const [email, setEmail] = useState('');
