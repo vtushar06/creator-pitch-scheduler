@@ -2,17 +2,25 @@ import { Request, Response, NextFunction } from "express";
 import { getClient } from "../config/db";
 
 export const createBooking = async (
-  req: Request,
+  req: any,
   res: Response,
   next: NextFunction
 ) => {
-  const { slotId, userId, idempotencyKey } = req.body;
+  const { slotId, idempotencyKey } = req.body;
+  const userId = req.user?.userId; // Get from JWT token
 
   // Basic Validation
-  if (!slotId || !userId || !idempotencyKey) {
+  if (!slotId || !idempotencyKey) {
     return res.status(400).json({
       status: "error",
-      message: "slotId, userId, and idempotencyKey are required",
+      message: "slotId and idempotencyKey are required",
+    });
+  }
+
+  if (!userId) {
+    return res.status(401).json({
+      status: 'error',
+      message: 'Authentication required'
     });
   }
 
@@ -111,6 +119,142 @@ export const createBooking = async (
     }
 
     console.error("Booking Transaction Error:", error);
+    next(error);
+  } finally {
+    client.release();
+  }
+};
+
+export const cancelBooking = async (
+  req: any,
+  res: Response,
+  next: NextFunction
+) => {
+  const bookingId = parseInt(req.params.id);
+  const userId = req.user?.userId; // Get from JWT token
+
+  if (!userId) {
+    return res.status(401).json({
+      status: "error",
+      message: "Authentication required",
+    });
+  }
+
+  const client = await getClient();
+
+  try {
+    await client.query("BEGIN");
+
+    // 1. Lock and fetch the booking
+    const bookingResult = await client.query(
+      "SELECT * FROM bookings WHERE id = $1 FOR UPDATE",
+      [bookingId]
+    );
+
+    if (bookingResult.rows.length === 0) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({
+        status: "error",
+        message: "Booking not found",
+      });
+    }
+
+    const booking = bookingResult.rows[0];
+
+    // 2. Authorization: User can only cancel their own booking
+    if (booking.user_id !== userId) {
+      await client.query("ROLLBACK");
+      return res.status(403).json({
+        status: "error",
+        message: "You can only cancel your own bookings",
+      });
+    }
+
+    // 3. Check if already cancelled
+    if (booking.status === "CANCELLED") {
+      await client.query("ROLLBACK");
+      return res.status(409).json({
+        status: "error",
+        message: "Booking is already cancelled",
+      });
+    }
+
+    // 4. Update booking status
+    await client.query(
+      `UPDATE bookings 
+       SET status = 'CANCELLED', cancelled_at = NOW() 
+       WHERE id = $1`,
+      [bookingId]
+    );
+
+    // 5. Release the slot back to AVAILABLE
+    await client.query(
+      `UPDATE slots 
+       SET status = 'AVAILABLE' 
+       WHERE id = $1`,
+      [booking.slot_id]
+    );
+
+    await client.query("COMMIT");
+
+    res.status(200).json({
+      status: "success",
+      message: "Booking cancelled successfully",
+      data: {
+        bookingId,
+        slotId: booking.slot_id,
+      },
+    });
+  } catch (error: any) {
+    await client.query("ROLLBACK");
+    console.error("Cancel Booking Error:", error);
+    next(error);
+  } finally {
+    client.release();
+  }
+};
+
+// GET /api/bookings/me - Fetch current user's bookings
+export const getMyBookings = async (
+  req: any,
+  res: Response,
+  next: NextFunction
+) => {
+  const userId = req.user?.userId;
+
+  if (!userId) {
+    return res.status(401).json({
+      status: "error",
+      message: "Authentication required",
+    });
+  }
+
+  const client = await getClient();
+
+  try {
+    const result = await client.query(
+      `SELECT 
+        b.id,
+        b.slot_id,
+        b.user_id,
+        b.status,
+        b.created_at,
+        s.start_time,
+        s.end_time,
+        u.name as mentor_name
+      FROM bookings b
+      JOIN slots s ON b.slot_id = s.id
+      JOIN users u ON s.admin_id = u.id
+      WHERE b.user_id = $1 AND b.status = 'ACTIVE'
+      ORDER BY s.start_time ASC`,
+      [userId]
+    );
+
+    res.json({
+      status: "success",
+      data: result.rows,
+    });
+  } catch (error) {
     next(error);
   } finally {
     client.release();
