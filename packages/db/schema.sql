@@ -22,8 +22,10 @@ CREATE TABLE slots (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     
     -- SENIOR FEATURE: Prevent overlaps at DB level
+    -- Allows same admin to create overlapping slots for different mentors
     CONSTRAINT no_overlap EXCLUDE USING gist (
         admin_id WITH =,
+        mentor_id WITH =,
         tstzrange(start_time, end_time) WITH &&
     ) WHERE (status != 'CANCELLED')
 );
