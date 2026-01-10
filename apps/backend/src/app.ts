@@ -7,7 +7,31 @@ import authRoutes from './routes/authRoutes';
 
 const app = express();
 
-app.use(cors());
+// Configure CORS for production
+const allowedOrigins = [
+  'http://localhost:5173', // Local development
+  'https://creator-pitch-scheduler-fronten-tushar-vermas-projects-f01f3eda.vercel.app',
+  /^https:\/\/.*\.vercel\.app$/ // Allow all Vercel preview deployments
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    const isAllowed = allowedOrigins.some(allowed => 
+      typeof allowed === 'string' ? allowed === origin : allowed.test(origin)
+    );
+    
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
+
 app.use(express.json());
 // Removed mockAuth - using real JWT authentication now
 
