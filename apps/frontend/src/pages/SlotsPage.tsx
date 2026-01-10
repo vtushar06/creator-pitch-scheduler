@@ -37,12 +37,6 @@ export const SlotsPage = () => {
     });
   }, [slots, filters.window]);
 
-  // Find user's booking for the selected date
-  const myBooking = useMemo(() => {
-    if (!slots) return null;
-    return slots.find((slot) => slot.status === 'BOOKED' && slot.booking_id);
-  }, [slots]);
-
   // Pagination helpers
   const handlePreviousDay = () => {
     const date = new Date(filters.date);
@@ -65,31 +59,28 @@ export const SlotsPage = () => {
       <div className="sticky top-0 z-20 bg-void/80 backdrop-blur-xl border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-between mb-6">
-            <div className="flex-1 text-center">
-              <h1 className="font-[Slussen] font-semibold leading-[130%] tracking-[-0.01em] text-[#D4C3C3] text-[28px] sm:text-[36px] lg:text-[48px] max-w-[500px] mb-3 sm:mb-4 mx-auto">
-                CREATOR PITCH SCHEDULER
+            <div>
+              <h1 className="text-5xl font-black bg-gradient-to-r from-white via-mugafiPink to-mugafiRed bg-clip-text text-transparent mb-2" style={{ fontFamily: 'Slussen' }}>
+                Book Your Session
               </h1>
-              <div className="inline-block px-4 py-1.5 bg-mugafiRed/20 border border-mugafiRed/30 rounded-full">
-                <p className="text-sm text-mugafiPink font-black tracking-wider uppercase">Mugafi Studios</p>
-              </div>
+              <p className="text-white/60 text-sm">
+                Welcome back, <span className="text-mugafiPink font-bold">{user?.name}</span>
+              </p>
             </div>
-            <div className="absolute right-4 top-6 flex items-center space-x-4">
-              <div className="flex items-center space-x-3 bg-void/80 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2.5">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-mugafiRed to-mugafiPink flex items-center justify-center shadow-lg shadow-mugafiRed/30">
-                  <span className="text-white font-black text-sm">
-                    {user?.name?.charAt(0).toUpperCase() || 'U'}
-                  </span>
-                </div>
-                <div className="text-left">
-                  <p className="text-white font-bold text-sm">{user?.name}</p>
-                  <p className="text-white/50 text-xs font-medium uppercase">{user?.role}</p>
-                </div>
-              </div>
+            
+            {/* Navigation & Actions */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate('/my-bookings')}
+                className="px-6 py-2.5 bg-mugafiRed/20 hover:bg-mugafiRed text-white rounded-xl font-bold border border-mugafiRed/30 hover:border-mugafiRed transition-all shadow-lg shadow-mugafiRed/20"
+              >
+                📅 My Bookings
+              </button>
               <button
                 onClick={handleLogout}
-                className="px-5 py-2.5 bg-void/80 border border-white/20 rounded-xl text-white/80 text-sm font-bold hover:text-white hover:border-mugafiRed/50 hover:bg-mugafiRed/10 transition-all"
+                className="px-6 py-2.5 bg-white/5 hover:bg-white/10 text-white/80 hover:text-white rounded-xl font-semibold border border-white/10 transition-all"
               >
-                LOGOUT
+                Logout
               </button>
             </div>
           </div>
@@ -145,13 +136,8 @@ export const SlotsPage = () => {
         </div>
       </div>
 
-      {/* Main Content - 2 Column Layout */}
+      {/* Main Content - Full Width */}
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left: Slots Grid z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left: Slots Grid */}
-          <div className="lg:col-span-2">
         {/* Loading State */}
         {isLoading && (
           <div className="flex items-center justify-center py-16">
@@ -235,7 +221,7 @@ export const SlotsPage = () => {
 
         {/* Slots Grid */}
         {!isLoading && !isError && filteredSlots && filteredSlots.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredSlots.map((slot) => (
               <SlotCard key={slot.id} slot={slot} />
             ))}
@@ -248,73 +234,6 @@ export const SlotsPage = () => {
             <p className="text-zinc-500">No slots in this time window. Try a different filter.</p>
           </div>
         )}
-          </div>
-
-          {/* Right Rail: My Booking Summary (Sticky Sidebar) */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-32">
-              <div className="bg-void/50 backdrop-blur-xl rounded-2xl border border-white/10 p-6 shadow-2xl">
-                <div className="flex items-center space-x-2 mb-4">
-                  <svg className="w-5 h-5 text-mugafiRed" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                  </svg>
-                  <h3 className="text-lg font-black text-white tracking-tighter">YOUR SCHEDULE</h3>
-                </div>
-
-                {myBooking ? (
-                  <div className="space-y-3">
-                    <div className="p-4 bg-mugafiRed/10 border border-mugafiRed/30 rounded-xl">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <p className="text-sm font-bold text-mugafiPink tracking-tight">UPCOMING SESSION</p>
-                          <p className="text-xs text-white/50 mt-1 font-semibold">
-                            {new Date(myBooking.start_time).toLocaleDateString('en-US', {
-                              weekday: 'short',
-                              month: 'short',
-                              day: 'numeric',
-                            })}
-                          </p>
-                        </div>
-                        <span className="px-2 py-1 bg-mugafiRed text-white text-xs font-black rounded-full animate-pulse-slow">
-                          BOOKED
-                        </span>
-                      </div>
-                      <div className="mt-3 pt-3 border-t border-mugafiRed/20">
-                        <p className="text-lg font-black text-white tracking-tight">
-                          {new Date(myBooking.start_time).toLocaleTimeString('en-US', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                          {' - '}
-                          {new Date(myBooking.end_time).toLocaleTimeString('en-US', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </p>
-                        <p className="text-sm text-white/70 mt-1 font-semibold">
-                          with {myBooking.mentor_name}
-                        </p>
-                      </div>
-                    </div>
-                    <p className="text-xs text-white/40 text-center font-semibold">
-                      You can cancel this booking from the card below
-                    </p>
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-                      <svg className="w-8 h-8 text-white/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <p className="text-sm text-white/40 font-bold tracking-tight">NO SESSIONS BOOKED</p>
-                    <p className="text-xs text-white/30 mt-1 font-semibold">on {new Date(filters.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
