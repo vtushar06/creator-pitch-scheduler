@@ -33,7 +33,6 @@ app.use(cors({
 }));
 
 app.use(express.json());
-// Removed mockAuth - using real JWT authentication now
 
 app.get('/health', async (req: Request, res: Response, next: NextFunction) => {
   try {

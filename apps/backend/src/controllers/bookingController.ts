@@ -7,9 +7,8 @@ export const createBooking = async (
   next: NextFunction
 ) => {
   const { slotId, idempotencyKey } = req.body;
-  const userId = req.user?.userId; // Get from JWT token
+  const userId = req.user?.userId;
 
-  // Basic Validation
   if (!slotId || !idempotencyKey) {
     return res.status(400).json({
       status: "error",
@@ -27,11 +26,8 @@ export const createBooking = async (
   const client = await getClient();
 
   try {
-    // 1. Start Transaction
     await client.query("BEGIN");
 
-    // 2. Lock the Slot (PESSIMISTIC LOCKING)
-    // This freezes the row so no other transaction can read/write it until we commit.
     const slotResult = await client.query(
       "SELECT * FROM slots WHERE id = $1 FOR UPDATE",
       [slotId]
@@ -47,10 +43,8 @@ export const createBooking = async (
 
     const slot = slotResult.rows[0];
 
-    // 3. Business Rule: Check if Available
     if (slot.status !== "AVAILABLE") {
       await client.query("ROLLBACK");
-      // 409 Conflict is the correct status for "Resource state prevents action"
       return res.status(409).json({
         status: "error",
         message: "Slot is not available",
@@ -58,7 +52,6 @@ export const createBooking = async (
       });
     }
 
-    // 3.5. Check if user already has an overlapping booking
     const userOverlapCheck = await client.query(
       `SELECT b.id 
        FROM bookings b 
@@ -78,7 +71,6 @@ export const createBooking = async (
       });
     }
 
-    // 4. Create Booking
     const bookingResult = await client.query(
       `INSERT INTO bookings (slot_id, user_id, idempotency_key, status, created_at)
        VALUES ($1, $2, $3, 'BOOKED', NOW())
@@ -86,12 +78,10 @@ export const createBooking = async (
       [slotId, userId, idempotencyKey]
     );
 
-    // 5. Update Slot Status
     await client.query(`UPDATE slots SET status = 'BOOKED' WHERE id = $1`, [
       slotId,
     ]);
 
-    // 6. Commit Transaction
     await client.query("COMMIT");
 
     res.status(201).json({
@@ -103,8 +93,6 @@ export const createBooking = async (
   } catch (error: any) {
     await client.query("ROLLBACK");
 
-    // Handle Idempotency (Network Retry)
-    // Constraint name matches your SQL: CREATE UNIQUE INDEX idx_bookings_idempotency ...
     if (
       error.code === "23505" &&
       error.constraint === "idx_bookings_idempotency"
@@ -117,7 +105,7 @@ export const createBooking = async (
       if (existingBooking.rows.length > 0) {
         return res.status(200).json({
           status: "success",
-          message: "Booking already exists (idempotent retry)",
+          message: "Booking already exists",
           data: {
             booking: existingBooking.rows[0],
           },
@@ -125,16 +113,13 @@ export const createBooking = async (
       }
     }
 
-    // Handle Race Condition / Double Booking
-    // Constraint name matches your SQL: CREATE UNIQUE INDEX unique_active_booking ...
     if (
       error.code === "23505" &&
       error.constraint === "unique_active_booking"
     ) {
       return res.status(409).json({
         status: "error",
-        message:
-          "Slot already has an active booking (Double booking prevented)",
+        message: "Slot already booked",
       });
     }
 
@@ -151,7 +136,7 @@ export const cancelBooking = async (
   next: NextFunction
 ) => {
   const bookingId = parseInt(req.params.id);
-  const userId = req.user?.userId; // Get from JWT token
+  const userId = req.user?.userId;
 
   if (!userId) {
     return res.status(401).json({
@@ -165,7 +150,6 @@ export const cancelBooking = async (
   try {
     await client.query("BEGIN");
 
-    // 1. Lock and fetch the booking
     const bookingResult = await client.query(
       "SELECT * FROM bookings WHERE id = $1 FOR UPDATE",
       [bookingId]
@@ -181,7 +165,6 @@ export const cancelBooking = async (
 
     const booking = bookingResult.rows[0];
 
-    // 2. Authorization: User can only cancel their own booking
     if (booking.user_id !== userId) {
       await client.query("ROLLBACK");
       return res.status(403).json({
@@ -190,7 +173,6 @@ export const cancelBooking = async (
       });
     }
 
-    // 3. Check if already cancelled
     if (booking.status === "CANCELLED") {
       await client.query("ROLLBACK");
       return res.status(409).json({
@@ -199,7 +181,6 @@ export const cancelBooking = async (
       });
     }
 
-    // 4. Update booking status
     await client.query(
       `UPDATE bookings 
        SET status = 'CANCELLED', cancelled_at = NOW() 
@@ -207,7 +188,6 @@ export const cancelBooking = async (
       [bookingId]
     );
 
-    // 5. Release the slot back to AVAILABLE
     await client.query(
       `UPDATE slots 
        SET status = 'AVAILABLE' 
@@ -234,7 +214,6 @@ export const cancelBooking = async (
   }
 };
 
-// GET /api/bookings/me - Fetch current user's bookings
 export const getMyBookings = async (
   req: any,
   res: Response,

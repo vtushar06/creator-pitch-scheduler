@@ -52,10 +52,8 @@ export const SlotsPage = () => {
 
   return (
     <div className="min-h-screen bg-void relative">
-      {/* Cosmic Background */}
       <CosmicBackground />
 
-      {/* Sticky Header */}
       <div className="sticky top-0 z-20 bg-void/80 backdrop-blur-xl border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-between mb-6">
@@ -68,7 +66,6 @@ export const SlotsPage = () => {
               </p>
             </div>
             
-            {/* Navigation & Actions */}
             <div className="flex items-center gap-3">
               <button
                 onClick={() => navigate('/my-bookings')}
@@ -85,7 +82,6 @@ export const SlotsPage = () => {
             </div>
           </div>
 
-          {/* Date Picker with Pagination */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-3">
               <button
@@ -116,7 +112,6 @@ export const SlotsPage = () => {
             </div>
           </div>
 
-          {/* Time Window Chips */}
           <div className="flex items-center space-x-3">
             <span className="text-sm text-white/40 font-bold tracking-wider">TIME WINDOW:</span>
             {(['all', 'morning', 'afternoon', 'evening'] as TimeWindow[]).map((window) => (
@@ -136,9 +131,7 @@ export const SlotsPage = () => {
         </div>
       </div>
 
-      {/* Main Content - Full Width */}
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Loading State */}
         {isLoading && (
           <div className="flex items-center justify-center py-16">
             <div className="text-center">
@@ -155,7 +148,6 @@ export const SlotsPage = () => {
           </div>
         )}
 
-        {/* Error State */}
         {isError && (
           <div className="flex items-center justify-center py-16">
             <div className="text-center max-w-md">
@@ -219,7 +211,6 @@ export const SlotsPage = () => {
           </div>
         )}
 
-        {/* Slots Grid */}
         {!isLoading && !isError && filteredSlots && filteredSlots.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredSlots.map((slot) => (
@@ -228,7 +219,6 @@ export const SlotsPage = () => {
           </div>
         )}
 
-        {/* No results after filtering */}
         {!isLoading && !isError && slots && slots.length > 0 && filteredSlots.length === 0 && (
           <div className="text-center py-16">
             <p className="text-zinc-500">No slots in this time window. Try a different filter.</p>

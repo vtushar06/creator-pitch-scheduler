@@ -1,14 +1,13 @@
 import { Request, Response, NextFunction } from "express";
 import { getClient } from "../config/db";
 
-// GET /api/slots?date=2026-01-20
 export const getSlots = async (
   req: any,
   res: Response,
   next: NextFunction
 ) => {
   const { date } = req.query;
-  const userRole = req.user?.role; // Get user role from JWT
+  const userRole = req.user?.role;
   const client = await getClient();
 
   try {
@@ -33,15 +32,12 @@ export const getSlots = async (
     const params: any[] = [];
     const whereClauses: string[] = [];
 
-    // Filter by status: ADMIN sees all slots, CUSTOMER sees only AVAILABLE and not CANCELLED
     if (userRole !== 'ADMIN') {
       whereClauses.push(`s.status = 'AVAILABLE'`);
     } else {
-      // Admin sees AVAILABLE and BOOKED, but not CANCELLED
       whereClauses.push(`s.status IN ('AVAILABLE', 'BOOKED')`);
     }
 
-    // Filter by Date (Senior implementation: Handles Timezones correctly)
     if (date) {
       whereClauses.push(`s.start_time::date = $${params.length + 1}`);
       params.push(date);
@@ -66,14 +62,13 @@ export const getSlots = async (
   }
 };
 
-// POST /api/slots (Admin only)
 export const createSlot = async (
   req: any,
   res: Response,
   next: NextFunction
 ) => {
   const { startTime, endTime, mentorId } = req.body;
-  const adminId = req.user?.userId; // Get from JWT token
+  const adminId = req.user?.userId;
   const client = await getClient();
 
   if (!adminId) {
@@ -91,7 +86,6 @@ export const createSlot = async (
   }
 
   try {
-    // Check if mentor is already assigned to overlapping slot
     const overlapCheck = await client.query(
       `SELECT id FROM slots 
        WHERE admin_id = $1 
@@ -120,12 +114,10 @@ export const createSlot = async (
       data: result.rows[0],
     });
   } catch (error: any) {
-    // Handle the Exclusion Constraint error gracefully
     if (error.code === "23P01") {
-      // PostgreSQL code for exclusion violation
       return res.status(409).json({
         status: "error",
-        message: "Overlapping slot detected for this admin",
+        message: "Overlapping slot detected",
       });
     }
     next(error);
@@ -134,7 +126,6 @@ export const createSlot = async (
   }
 };
 
-// DELETE /api/admin/slots/:id - Admin cancel/delete a slot
 export const deleteSlot = async (
   req: any,
   res: Response,
@@ -155,7 +146,6 @@ export const deleteSlot = async (
   try {
     await client.query("BEGIN");
 
-    // 1. Fetch and lock the slot first
     const slotResult = await client.query(
       `SELECT * FROM slots WHERE id = $1 FOR UPDATE`,
       [slotId]
@@ -171,7 +161,6 @@ export const deleteSlot = async (
 
     const slot = slotResult.rows[0];
 
-    // 2. Fetch booking info separately if slot is booked
     let bookingInfo = null;
     if (slot.status === 'BOOKED') {
       const bookingResult = await client.query(
@@ -187,21 +176,15 @@ export const deleteSlot = async (
       }
     }
 
-    // 3. If slot is BOOKED, cancel the booking and send notification (mocked)
     if (slot.status === 'BOOKED' && bookingInfo) {
-      // Cancel the booking
       await client.query(
         `UPDATE bookings SET status = 'CANCELLED', cancelled_at = NOW() WHERE id = $1`,
         [bookingInfo.booking_id]
       );
 
-      // Mock notification/email
-      console.log(`📧 [MOCK EMAIL] Slot cancelled notification sent to ${bookingInfo.booked_by_email}`);
-      console.log(`   User: ${bookingInfo.booked_by_name}`);
-      console.log(`   Slot: ${slot.start_time} - ${slot.end_time}`);
+      console.log(`📧 Slot cancelled - notification would be sent to ${bookingInfo.booked_by_email}`);
     }
 
-    // 4. Update slot status to CANCELLED
     await client.query(
       `UPDATE slots SET status = 'CANCELLED' WHERE id = $1`,
       [slotId]

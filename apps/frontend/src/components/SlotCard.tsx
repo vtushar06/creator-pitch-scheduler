@@ -48,18 +48,14 @@ export const SlotCard: React.FC<SlotCardProps> = ({ slot }: SlotCardProps) => {
 
   return (
     <div className="group relative rounded-2xl overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-mugafiRed/30">
-      {/* Cinematic Mentor Hero Section */}
       <div className="relative h-56 overflow-hidden">
-        {/* Mentor Portrait Background */}
         <div 
           className="absolute inset-0 bg-cover bg-center scale-105 transition-transform duration-700 group-hover:scale-110"
           style={{ backgroundImage: `url(${mentor.image})` }}
         />
         
-        {/* Cosmic Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-void via-void/90 to-transparent" />
         
-        {/* Mentor Info Overlay */}
         <div className="absolute bottom-0 left-0 right-0 p-5">
           <div className="flex items-end justify-between">
             <div>
@@ -74,7 +70,6 @@ export const SlotCard: React.FC<SlotCardProps> = ({ slot }: SlotCardProps) => {
               </div>
             </div>
             
-            {/* Status Badge - Moved to hero */}
             {isOwnBooking && (
               <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-mugafiRed/30 text-mugafiPink border border-mugafiRed/50 backdrop-blur-md animate-pulse-slow">
                 YOUR BOOKING
@@ -88,13 +83,10 @@ export const SlotCard: React.FC<SlotCardProps> = ({ slot }: SlotCardProps) => {
           </div>
         </div>
 
-        {/* Cosmic Accent Line */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-mugafiRed to-transparent opacity-60" />
       </div>
 
-      {/* Card Content */}
       <div className="bg-zinc-900/80 backdrop-blur-md border-x border-b border-white/10 group-hover:border-mugafiRed/30 transition-colors p-6">
-        {/* Time Display */}
         <div className="mb-6">
           <h3 className="text-2xl font-bold text-white tracking-tighter mb-1">
             {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
@@ -107,7 +99,6 @@ export const SlotCard: React.FC<SlotCardProps> = ({ slot }: SlotCardProps) => {
             })}
           </p>
         </div>
-        {/* Book Button (Available) */}
         {isAvailable && (
           <button
             onClick={handleBook}
@@ -132,7 +123,6 @@ export const SlotCard: React.FC<SlotCardProps> = ({ slot }: SlotCardProps) => {
           </button>
         )}
 
-        {/* Cancel Button (Your Booking) */}
         {isOwnBooking && (
           <button
             onClick={handleCancel}
@@ -147,7 +137,6 @@ export const SlotCard: React.FC<SlotCardProps> = ({ slot }: SlotCardProps) => {
           </button>
         )}
 
-        {/* Unavailable (Booked by Others) */}
         {isBooked && !isOwnBooking && (
           <button
             disabled
