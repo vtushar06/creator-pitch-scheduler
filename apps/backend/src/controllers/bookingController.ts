@@ -261,3 +261,53 @@ export const getMyBookings = async (
     client.release();
   }
 };
+
+export const getAllBookings = async (
+  req: any,
+  res: Response,
+  next: NextFunction
+) => {
+  const userRole = req.user?.role;
+
+  if (userRole !== 'ADMIN') {
+    return res.status(403).json({
+      status: "error",
+      message: "Admin access required",
+    });
+  }
+
+  const client = await getClient();
+
+  try {
+    const result = await client.query(
+      `SELECT 
+        b.id,
+        b.slot_id,
+        b.user_id,
+        b.status as booking_status,
+        b.created_at,
+        b.cancelled_at,
+        s.start_time,
+        s.end_time,
+        s.status as slot_status,
+        s.mentor_id,
+        u.name as user_name,
+        u.email as user_email
+      FROM bookings b
+      JOIN slots s ON b.slot_id = s.id
+      JOIN users u ON b.user_id = u.id
+      WHERE b.status IN ('BOOKED', 'CANCELLED')
+      ORDER BY s.start_time DESC`
+    );
+
+    res.json({
+      status: "success",
+      data: result.rows,
+    });
+  } catch (error) {
+    console.error('❌ Error in getAllBookings:', error);
+    next(error);
+  } finally {
+    client.release();
+  }
+};
