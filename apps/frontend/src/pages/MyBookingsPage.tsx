@@ -7,6 +7,7 @@ export default function MyBookingsPage() {
   const { data: bookings = [], isLoading } = useMyBookings();
   const cancelBooking = useCancelBooking();
   const [cancellingId, setCancellingId] = useState<number | null>(null);
+  const [cancelConfirm, setCancelConfirm] = useState<{ bookingId: number; startTime: string; mentorName: string } | null>(null);
 
   const activeBookings = bookings
     .filter(b => b.booking_status === 'BOOKED' && b.slot_status === 'BOOKED')
@@ -16,12 +17,17 @@ export default function MyBookingsPage() {
     .filter(b => b.booking_status === 'CANCELLED' || b.slot_status === 'CANCELLED')
     .sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime());
 
-  const handleCancel = async (bookingId: number) => {
-    if (!confirm('Are you sure you want to cancel this booking?')) return;
+  const handleCancel = (bookingId: number, startTime: string, mentorName: string) => {
+    setCancelConfirm({ bookingId, startTime, mentorName });
+  };
+
+  const confirmCancel = async () => {
+    if (!cancelConfirm) return;
     
-    setCancellingId(bookingId);
+    setCancellingId(cancelConfirm.bookingId);
     try {
-      await cancelBooking.mutateAsync({ bookingId });
+      await cancelBooking.mutateAsync({ bookingId: cancelConfirm.bookingId });
+      setCancelConfirm(null);
     } finally {
       setCancellingId(null);
     }
@@ -131,7 +137,7 @@ export default function MyBookingsPage() {
                         Booked
                       </button>
                       <button
-                        onClick={() => handleCancel(booking.id)}
+                        onClick={() => handleCancel(booking.id, booking.start_time, mentor?.name || 'Mentor')}
                         disabled={isCancelling}
                         className="flex-1 bg-mugafiRed/10 text-mugafiRed hover:bg-mugafiRed hover:text-white px-4 py-2 rounded-lg font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed border border-mugafiRed/30"
                       >
@@ -206,6 +212,40 @@ export default function MyBookingsPage() {
           </div>
         )}
       </div>
+
+      {/* Cancel Confirmation Modal */}
+      {cancelConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-void/80 backdrop-blur-sm">
+          <div className="bg-void/90 backdrop-blur-xl rounded-2xl border border-white/20 p-8 max-w-md mx-4 shadow-2xl">
+            <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-mugafiRed/20 border border-mugafiRed/30 flex items-center justify-center">
+              <svg className="w-8 h-8 text-mugafiRed" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h3 className="text-2xl font-black text-white text-center mb-4 tracking-tight">
+              CANCEL BOOKING?
+            </h3>
+            <p className="text-white/70 text-center mb-6 text-sm font-medium">
+              You have a booking with <span className="text-mugafiPink font-bold">{cancelConfirm.mentorName}</span> on <span className="text-white font-bold">{new Date(cancelConfirm.startTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span> at <span className="text-white font-bold">{new Date(cancelConfirm.startTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</span>. This action cannot be undone.
+            </p>
+            <div className="flex space-x-4">
+              <button
+                onClick={() => setCancelConfirm(null)}
+                className="flex-1 py-3 bg-void/80 border border-white/20 rounded-xl text-white/80 font-bold hover:border-white/40 transition-all"
+              >
+                KEEP
+              </button>
+              <button
+                onClick={confirmCancel}
+                disabled={cancellingId !== null}
+                className="flex-1 py-3 bg-gradient-to-r from-mugafiRed to-mugafiPink rounded-xl text-white font-black hover:shadow-lg hover:shadow-mugafiRed/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {cancellingId === cancelConfirm.bookingId ? 'CANCELLING...' : 'CANCEL BOOKING'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
