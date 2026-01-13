@@ -4,7 +4,7 @@ A full-stack booking application built to handle high concurrency and strict dat
 
 My primary focus was solving the **"Double Booking" problem**—ensuring that if two users click "Book" at the exact same millisecond, only one succeeds, and the system state remains consistent.This isn't just a CRUD app.
 
-## 🛠 Tech Stack & Versions
+## Tech Stack & Versions
 
 I chose this stack to balance development speed with type safety and performance.
 
@@ -15,7 +15,7 @@ I chose this stack to balance development speed with type safety and performance
 
 ---
 
-## � Prerequisites
+## Prerequisites
 
 Before you start, make sure you have these installed:
 
@@ -34,7 +34,7 @@ docker --version # Should show Docker version
 
 ---
 
-## 🚀 Complete Setup Guide (For New Users/Forked Repos)
+## Complete Setup Guide (For New Users/Forked Repos)
 
 Follow these steps to get the project running on your local machine.
 
@@ -94,9 +94,9 @@ docker-compose up --build
 ```
 
 Wait for all services to start. You'll see:
-* ✅ Database initialized
-* ✅ Backend running on port 3000
-* ✅ Frontend running on port 5173
+* Database initialized
+* Backend running on port 3000
+* Frontend running on port 5173
 
 **Access the application:**
 * **Frontend:** http://localhost:5173
@@ -192,7 +192,7 @@ You should see:
  Admin User   | admin@example.com | ADMIN
 ```
 
-✅ **Success!** You can now login with:
+**Success!** You can now login with:
 - Email: `admin@example.com`
 - Password: `AdminPassword123` (or whatever you set)
 
@@ -303,7 +303,7 @@ Tests:       5 passed, 5 total
 
 ---
 
-## 🔑 Environment Variables
+## Environment Variables
 
 See `.env.example` for the template.
 
@@ -316,7 +316,7 @@ See `.env.example` for the template.
 
 ---
 
-## 🗄 Database Migrations
+## Database Migrations
 
 Since this is a raw SQL/Node implementation (to demonstrate core backend skills without ORM magic hiding the logic), migrations are handled via SQL scripts.
 
@@ -329,7 +329,7 @@ Since this is a raw SQL/Node implementation (to demonstrate core backend skills 
 
 ---
 
-## 🧪 How to Run Tests
+## How to Run Tests
 
 I prioritized testing the "Complex Areas" mentioned in the requirements (Concurrency & Auth).
 
@@ -349,7 +349,7 @@ npm test
 
 ---
 
-## 🧠 Key Design Decisions
+## Key Design Decisions
 
 ### 1. preventing Double Bookings (The Concurrency Mechanism)
 
