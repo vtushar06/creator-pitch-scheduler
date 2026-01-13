@@ -9,6 +9,8 @@ export const createBooking = async (
   const { slot_id } = req.body;
   const userId = req.user?.userId;
 
+  console.log('Booking attempt:', { slot_id, userId }); 
+
   // Validate slot_id type and value
   if (!slot_id || typeof slot_id !== 'number' || !Number.isInteger(slot_id) || slot_id <= 0) {
     return res.status(400).json({
@@ -19,6 +21,7 @@ export const createBooking = async (
 
   // Generate idempotency key internally for retries
   const idempotencyKey = req.body.idempotencyKey || `${userId}-${slot_id}-${Date.now()}`;
+  // const debugMode = process.env.NODE_ENV === 'development';
 
   if (!userId) {
     return res.status(401).json({
@@ -46,6 +49,8 @@ export const createBooking = async (
     }
 
     const slot = slotResult.rows[0];
+
+    console.log('Slot status check:', slot.status); // quick debug
 
     if (slot.status !== "AVAILABLE") {
       await client.query("ROLLBACK");

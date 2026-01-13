@@ -88,6 +88,7 @@ export const createSlot = async (
   try {
     await client.query("BEGIN");
 
+    // TODO: maybe add notification to other admins about new slot creation?
     const overlapCheck = await client.query(
       `SELECT id FROM slots 
        WHERE admin_id = $1 
@@ -97,6 +98,8 @@ export const createSlot = async (
        FOR UPDATE`,
       [adminId, mentorId, startTime, endTime]
     );
+
+    console.log('Overlap check results:', overlapCheck.rows.length);
 
     if (overlapCheck.rows.length > 0) {
       await client.query("ROLLBACK");
