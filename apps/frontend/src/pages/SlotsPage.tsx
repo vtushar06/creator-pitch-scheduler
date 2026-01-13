@@ -210,32 +210,47 @@ export const SlotsPage = () => {
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           {isLoading && (
-            <div className="flex items-center justify-center py-16">
-              <div className="text-center">
-                <div className="animate-pulse space-y-6">
-                  <div className="h-6 bg-white/5 rounded w-40 mx-auto"></div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {[1, 2, 3].map((i) => (
-                      <div
-                        key={i}
-                        className="h-48 bg-white/5 rounded-2xl border border-white/10"
-                      ></div>
-                    ))}
+            <div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div
+                    key={i}
+                    className="animate-pulse space-y-4 p-6 bg-white/5 rounded-2xl border border-white/10"
+                  >
+                    {/* Time slot header skeleton */}
+                    <div className="h-4 bg-white/10 rounded w-24"></div>
+                    {/* Title skeleton */}
+                    <div className="h-6 bg-white/10 rounded w-3/4"></div>
+                    {/* Description skeleton */}
+                    <div className="space-y-2">
+                      <div className="h-3 bg-white/10 rounded w-full"></div>
+                      <div className="h-3 bg-white/10 rounded w-5/6"></div>
+                    </div>
+                    {/* Button skeleton */}
+                    <div className="pt-4">
+                      <div className="h-10 bg-white/10 rounded-lg w-full"></div>
+                    </div>
                   </div>
+                ))}
+              </div>
+              <div className="mt-8 flex items-center justify-center gap-2">
+                <div className="h-10 w-10 bg-white/5 rounded-lg animate-pulse"></div>
+                <div className="flex gap-2">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-10 w-10 bg-white/5 rounded-lg animate-pulse"></div>
+                  ))}
                 </div>
-                <p className="mt-8 text-white/40 text-sm font-semibold">
-                  LOADING SESSIONS...
-                </p>
+                <div className="h-10 w-10 bg-white/5 rounded-lg animate-pulse"></div>
               </div>
             </div>
           )}
 
           {isError && (
-            <div className="flex items-center justify-center py-16">
+            <div className="flex items-center justify-center py-20">
               <div className="text-center max-w-md">
-                <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-mugafiRed/10 border border-mugafiRed/30 flex items-center justify-center">
+                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-mugafiRed/10 border-2 border-mugafiRed/30 flex items-center justify-center">
                   <svg
-                    className="w-8 h-8 text-mugafiRed"
+                    className="w-10 h-10 text-mugafiRed"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -243,20 +258,22 @@ export const SlotsPage = () => {
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      strokeWidth={2}
+                      strokeWidth={1.5}
                       d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2 tracking-tight">
+                <h3 className="text-2xl font-bold text-white mb-3 tracking-tight">
                   FAILED TO LOAD SESSIONS
                 </h3>
-                <p className="text-sm text-white/50 mb-6">
-                  {error instanceof Error ? error.message : "An error occurred"}
+                <p className="text-sm text-white/50 mb-8 leading-relaxed">
+                  {error instanceof Error 
+                    ? error.message 
+                    : "An error occurred while loading available sessions. Please check your connection and try again."}
                 </p>
                 <button
                   onClick={() => refetch()}
-                  className="px-8 py-3 bg-gradient-to-r from-mugafiRed to-mugafiPink text-white font-bold rounded-xl hover:shadow-2xl hover:shadow-mugafiRed/50 transition-all transform hover:scale-105"
+                  className="w-full px-8 py-3 bg-gradient-to-r from-mugafiRed to-mugafiPink text-white font-bold rounded-xl hover:shadow-2xl hover:shadow-mugafiRed/50 transition-all transform hover:scale-105 active:scale-95"
                 >
                   TRY AGAIN
                 </button>
@@ -264,13 +281,13 @@ export const SlotsPage = () => {
             </div>
           )}
 
-          {/* Empty State */}
+          {/* Empty State - No slots available at all */}
           {!isLoading && !isError && slots && slots.length === 0 && (
-            <div className="flex items-center justify-center py-16">
+            <div className="flex items-center justify-center py-20">
               <div className="text-center max-w-md">
-                <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-white/5 border-2 border-white/10 flex items-center justify-center">
                   <svg
-                    className="w-8 h-8 text-white/30"
+                    className="w-10 h-10 text-white/40"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -278,17 +295,23 @@ export const SlotsPage = () => {
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      strokeWidth={2}
+                      strokeWidth={1.5}
                       d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                     />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2 tracking-tight">
-                  NO SESSIONS AVAILABLE
+                <h3 className="text-2xl font-bold text-white mb-3 tracking-tight">
+                  NO SLOTS AVAILABLE
                 </h3>
-                <p className="text-sm text-white/50">
-                  Try selecting a different date to see available slots.
+                <p className="text-sm text-white/50 mb-8 leading-relaxed">
+                  There are no appointment slots available for the selected date. Try selecting a different date or check back later.
                 </p>
+                <button
+                  onClick={handlePreviousDay}
+                  className="w-full px-8 py-3 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl border border-white/10 hover:border-white/20 transition-all"
+                >
+                  CHECK PREVIOUS DAY
+                </button>
               </div>
             </div>
           )}
@@ -374,10 +397,38 @@ export const SlotsPage = () => {
             (slots as any[]).length > 0 &&
             filteredSlots &&
             filteredSlots.length === 0 && (
-              <div className="text-center py-16">
-                <p className="text-zinc-500">
-                  No slots in this time window. Try a different filter.
-                </p>
+              <div className="flex items-center justify-center py-16">
+                <div className="text-center max-w-md">
+                  <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+                    <svg
+                      className="w-8 h-8 text-white/40"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M12 9v2m0 4v2m0 5v2M8.25 3h7.5M3 8.25v7.5M21 8.25v7.5M3 12h18M8.25 21h7.5"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-bold text-white mb-2 tracking-tight">
+                    NO SLOTS IN SELECTED TIME WINDOW
+                  </h3>
+                  <p className="text-sm text-white/50 mb-6">
+                    Try adjusting your filters or select a different time window.
+                  </p>
+                  <button
+                    onClick={() =>
+                      setFilters({ window: "all", sort: "earliest", page: 1 })
+                    }
+                    className="w-full px-4 py-2.5 bg-white/5 hover:bg-white/10 text-white font-semibold rounded-lg border border-white/10 hover:border-white/20 transition-all text-sm"
+                  >
+                    CLEAR ALL FILTERS
+                  </button>
+                </div>
               </div>
             )}
         </div>

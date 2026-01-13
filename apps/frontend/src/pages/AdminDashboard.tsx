@@ -129,7 +129,7 @@ export const AdminDashboard = () => {
       
       // Transform slots to booking format for display
       const bookingsData = slots.map((slot: SlotWithBooking) => ({
-        id: slot.booking_id || slot.id,
+        id: `booking-${slot.booking_id || slot.id}-${slot.start_time}`,
         slot_id: slot.id,
         user_id: 0,
         booking_status: slot.status,
