@@ -21,8 +21,8 @@ interface MyBookingsResponse {
 
 const fetchMyBookings = async (): Promise<Booking[]> => {
   const { data } = await axios.get<MyBookingsResponse>('/api/bookings/me');
-  console.log('📅 My Bookings Response:', data);
-  console.log('📅 My Bookings Data:', data.data);
+  console.log('My Bookings Response:', data);
+  console.log('My Bookings Data:', data.data);
   return data.data;
 };
 
@@ -30,7 +30,7 @@ export const useMyBookings = () => {
   return useQuery({
     queryKey: ['my-bookings'],
     queryFn: fetchMyBookings,
-    staleTime: 30000, // 30 seconds
+    staleTime: 30000, 
     refetchOnWindowFocus: true,
   });
 };
