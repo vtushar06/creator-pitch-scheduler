@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Slot } from '../hooks/useSlots';
 import { useBookSlot } from '../hooks/useBookSlot';
 import { useCancelBooking } from '../hooks/useCancelBooking';
@@ -11,7 +11,8 @@ interface SlotCardProps {
 
 export const SlotCard: React.FC<SlotCardProps> = ({ slot }: SlotCardProps) => {
   const { user } = useAuth();
-  const { mutate: bookSlot, isPending: isBooking } = useBookSlot();
+  const [conflictError, setConflictError] = useState<string | null>(null);
+  const { mutate: bookSlot, isPending: isBooking } = useBookSlot(setConflictError);
   const { mutate: cancelBooking, isPending: isCancelling } = useCancelBooking();
 
   // Get mentor data from MENTORS array
@@ -27,6 +28,7 @@ export const SlotCard: React.FC<SlotCardProps> = ({ slot }: SlotCardProps) => {
   const handleBook = () => {
     if (slot.status !== 'AVAILABLE' || !user) return;
 
+    setConflictError(null);
     const idempotencyKey = `${user.id}-${slot.id}-${Date.now()}`;
     bookSlot({
       slotId: slot.id,
@@ -100,27 +102,37 @@ export const SlotCard: React.FC<SlotCardProps> = ({ slot }: SlotCardProps) => {
           </p>
         </div>
         {isAvailable && (
-          <button
-            onClick={handleBook}
-            disabled={isBooking}
-            className={`w-full py-3.5 rounded-xl font-bold text-white tracking-tight transition-all duration-300 ${
-              !isBooking
-                ? 'bg-gradient-to-r from-mugafiRed to-mugafiPink hover:from-mugafiPink hover:to-mugafiRed shadow-xl shadow-mugafiRed/30 hover:shadow-2xl hover:shadow-mugafiRed/50 transform hover:scale-105'
-                : 'bg-white/5 text-white/30 cursor-not-allowed border border-white/10'
-            }`}
-          >
-            {isBooking ? (
-              <span className="flex items-center justify-center">
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          <>
+            <button
+              onClick={handleBook}
+              disabled={isBooking}
+              className={`w-full py-3.5 rounded-xl font-bold text-white tracking-tight transition-all duration-300 ${
+                !isBooking
+                  ? 'bg-gradient-to-r from-mugafiRed to-mugafiPink hover:from-mugafiPink hover:to-mugafiRed shadow-xl shadow-mugafiRed/30 hover:shadow-2xl hover:shadow-mugafiRed/50 transform hover:scale-105'
+                  : 'bg-white/5 text-white/30 cursor-not-allowed border border-white/10'
+              }`}
+            >
+              {isBooking ? (
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  BOOKING...
+                </span>
+              ) : (
+                'BOOK SESSION'
+              )}
+            </button>
+            {conflictError && (
+              <div className="mt-3 flex items-center gap-2 text-xs text-mugafiRed bg-mugafiRed/10 border border-mugafiRed/30 rounded-lg px-3 py-2 animate-pulse">
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                BOOKING...
-              </span>
-            ) : (
-              'BOOK SESSION'
+                <span className="font-semibold">{conflictError}</span>
+              </div>
             )}
-          </button>
+          </>
         )}
 
         {isOwnBooking && (
