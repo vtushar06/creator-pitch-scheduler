@@ -1,6 +1,7 @@
 import { useSlots } from '../hooks/useSlots';
 import { useUrlFilters, TimeWindow } from '../hooks/useUrlFilters';
 import { SlotCard } from '../components/SlotCard';
+import { BookingSummary } from '../components/BookingSummary';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -51,10 +52,11 @@ export const SlotsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-void relative">
+    <div className="min-h-screen bg-void relative lg:pr-96">
+      <BookingSummary />
       <CosmicBackground />
 
-      <div className="sticky top-0 z-20 bg-void/80 backdrop-blur-xl border-b border-white/10">
+      <div className="sticky top-0 z-30 bg-void/80 backdrop-blur-xl border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -71,7 +73,7 @@ export const SlotsPage = () => {
                 onClick={() => navigate('/my-bookings')}
                 className="px-6 py-2.5 bg-mugafiRed/20 hover:bg-mugafiRed text-white rounded-xl font-bold border border-mugafiRed/30 hover:border-mugafiRed transition-all shadow-lg shadow-mugafiRed/20"
               >
-                📅 My Bookings
+                All Bookings
               </button>
               <button
                 onClick={handleLogout}
