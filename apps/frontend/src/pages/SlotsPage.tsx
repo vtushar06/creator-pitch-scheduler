@@ -52,9 +52,11 @@ export const SlotsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-void relative lg:pr-96">
+    <div className="min-h-screen bg-void relative">
       <BookingSummary />
       <CosmicBackground />
+      
+      <div className="lg:pr-96">
 
       <div className="sticky top-0 z-30 bg-void/80 backdrop-blur-xl border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -226,6 +228,7 @@ export const SlotsPage = () => {
             <p className="text-zinc-500">No slots in this time window. Try a different filter.</p>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

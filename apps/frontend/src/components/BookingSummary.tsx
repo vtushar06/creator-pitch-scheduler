@@ -2,10 +2,12 @@ import { useMyBookings } from "../hooks/useMyBookings";
 import { MENTORS } from "../data/mentors";
 import { useUrlFilters } from "../hooks/useUrlFilters";
 import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 
 export const BookingSummary = () => {
   const { data: bookings = [], isLoading } = useMyBookings();
   const { filters } = useUrlFilters();
+  const navigate = useNavigate();
 
   const bookingsForDate = useMemo(() => {
     if (!bookings || !filters.date) return [];
@@ -51,8 +53,14 @@ export const BookingSummary = () => {
   };
 
   return (
-    <div className="hidden lg:flex fixed right-0 top-0 h-screen w-96 bg-void/80 backdrop-blur-xl border-l border-white/10 p-8 z-10 mt-20 flex-col">
-      <h3 className="text-2xl font-black text-white tracking-tighter mb-1">
+    <div className="flex lg:fixed lg:right-0 lg:top-0 h-screen w-full lg:w-96 bg-void/80 backdrop-blur-xl lg:border-l border-white/10 p-4 lg:p-8 z-10 mt-16 flex-col">
+      <button onClick={() => navigate(-1)} className="lg:hidden mb-3 flex items-center gap-2 text-white/70 hover:text-white transition-colors">
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+        <span className="text-sm font-bold">BACK</span>
+      </button>
+      <h3 className="text-xl lg:text-2xl font-black text-white tracking-tighter mb-1">
         TODAY'S BOOKINGS
       </h3>
       <p className="text-xs text-white/50 font-bold mb-4">
