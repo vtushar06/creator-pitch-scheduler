@@ -58,7 +58,7 @@ export const LoginPage = () => {
                 className="w-full h-full object-contain drop-shadow-2xl animate-pulse-slow"
               />
             </div>
-            <h1 className="font-[Slussen] font-semibold leading-[130%] tracking-[-0.01em] text-[#D4C3C3] text-[28px] sm:text-[36px] lg:text-[48px] max-w-[500px] mb-3 sm:mb-4 mx-auto">
+            <h1 className="google-sans-header text-[28px] sm:text-[36px] lg:text-[48px] max-w-[500px] mb-3 sm:mb-4 mx-auto text-[#F3F4F6]">
               {isRegister ? 'CREATE' : 'ENTER THE'}
               <span className="block bg-gradient-to-r from-mugafiRed via-mugafiPink to-mugafiRed bg-clip-text text-transparent animate-pulse-slow">
                 {isRegister ? 'ACCOUNT' : 'STUDIO'}

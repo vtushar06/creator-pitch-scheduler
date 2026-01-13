@@ -46,7 +46,7 @@ export default function MyBookingsPage() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-black text-white mb-2" style={{ fontFamily: 'Slussen' }}>
+          <h1 className="google-sans-header-bold text-4xl text-white mb-2">
             My Bookings
           </h1>
           <p className="text-white/60">Manage your scheduled sessions</p>
@@ -54,7 +54,7 @@ export default function MyBookingsPage() {
 
         {/* Active Bookings */}
         <div className="mb-12">
-          <h2 className="text-2xl font-black text-mugafiRed mb-6" style={{ fontFamily: 'Slussen' }}>
+          <h2 className="google-sans-header text-2xl text-mugafiRed mb-6">
             Upcoming Sessions ({activeBookings.length})
           </h2>
           

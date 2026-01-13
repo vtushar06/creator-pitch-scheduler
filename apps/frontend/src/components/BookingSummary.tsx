@@ -62,7 +62,7 @@ export const BookingSummary = () => {
         </svg>
         <span className="text-sm font-bold">BACK</span>
       </button>
-      <h3 className="text-xl lg:text-2xl font-black text-white tracking-tighter mb-1">
+      <h3 className="google-sans-header text-xl lg:text-2xl text-white tracking-tighter mb-1">
         My Booking Summary
       </h3>
       <p className="text-xs text-white/50 font-bold mb-4">

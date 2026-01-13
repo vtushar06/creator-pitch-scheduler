@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=ABeeZee:ital@0;1&family=Google+Sans+Flex:opsz,wght@6..144,1..1000&display=swap');
 
 /* Note: Slussen Extended is a premium font. Using system fallback or add via font files */
 
@@ -18,7 +19,7 @@
     @apply bg-gradient-to-r from-white via-mugafiPink to-mugafiRed bg-clip-text text-transparent;
   }
   
-  /* Mugafi Header Style */
+  /* Mugafi Tab Style */
   .main-tab {
     font-family: 'Slussen Extended', 'Inter', sans-serif;
     font-weight: 600;
@@ -27,6 +28,36 @@
     overflow-wrap: break-word;
     user-select: none;
     cursor: pointer;
+  }
+
+  /* Google Sans Flex Header - Bold */
+  .google-sans-header {
+    font-family: "Google Sans Flex", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 700;
+    font-style: normal;
+    font-variation-settings:
+      "slnt" 0,
+      "wdth" 100,
+      "GRAD" 0,
+      "ROND" 0;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  /* Google Sans Flex Header - Extra Bold */
+  .google-sans-header-bold {
+    font-family: "Google Sans Flex", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 800;
+    font-style: normal;
+    font-variation-settings:
+      "slnt" 0,
+      "wdth" 100,
+      "GRAD" 0,
+      "ROND" 0;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
   }
 }
 
