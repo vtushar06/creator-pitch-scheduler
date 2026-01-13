@@ -7,6 +7,8 @@ import logoWhite from '../images/website_logo_white.webp';
 
 export const LoginPage = () => {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isRegister, setIsRegister] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -14,17 +16,16 @@ export const LoginPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email) {
-      toast.error('Please enter your email');
+    if (!email || !password) {
+      toast.error('Please enter email and password');
       return;
     }
 
     setIsLoading(true);
 
     try {
-      await login(email);
+      await login(email, password, isRegister);
       
-      // Redirect based on role
       const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
       if (storedUser.role === 'ADMIN') {
         navigate('/admin');
@@ -32,9 +33,9 @@ export const LoginPage = () => {
         navigate('/slots');
       }
       
-      toast.success('Welcome to the Studio');
+      toast.success(isRegister ? 'Account created successfully' : 'Welcome to the Studio');
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Login failed');
+      toast.error(error.response?.data?.message || (isRegister ? 'Registration failed' : 'Login failed'));
     } finally {
       setIsLoading(false);
     }
@@ -58,9 +59,9 @@ export const LoginPage = () => {
               />
             </div>
             <h1 className="font-[Slussen] font-semibold leading-[130%] tracking-[-0.01em] text-[#D4C3C3] text-[28px] sm:text-[36px] lg:text-[48px] max-w-[500px] mb-3 sm:mb-4 mx-auto">
-              ENTER THE
+              {isRegister ? 'CREATE' : 'ENTER THE'}
               <span className="block bg-gradient-to-r from-mugafiRed via-mugafiPink to-mugafiRed bg-clip-text text-transparent animate-pulse-slow">
-                STUDIO
+                {isRegister ? 'ACCOUNT' : 'STUDIO'}
               </span>
             </h1>
             <p className="text-white/60 text-sm font-bold tracking-wider uppercase">
@@ -85,6 +86,21 @@ export const LoginPage = () => {
               />
             </div>
 
+            <div>
+              <label htmlFor="password" className="block text-sm font-bold text-white/90 mb-2 tracking-tight">
+                PASSWORD
+              </label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full px-5 py-4 bg-void/80 border border-white/20 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-mugafiRed/50 focus:border-mugafiRed transition-all font-medium"
+                disabled={isLoading}
+              />
+            </div>
+
             <button
               type="submit"
               disabled={isLoading}
@@ -100,32 +116,22 @@ export const LoginPage = () => {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  ENTERING...
+                  {isRegister ? 'CREATING...' : 'ENTERING...'}
                 </span>
               ) : (
-                'ENTER STUDIO'
+                isRegister ? 'CREATE ACCOUNT' : 'ENTER STUDIO'
               )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsRegister(!isRegister)}
+              className="w-full text-white/60 text-sm font-bold hover:text-mugafiPink transition-all"
+            >
+              {isRegister ? 'Already have an account? Login' : 'Need an account? Register'}
             </button>
           </form>
 
-          {/* Demo Accounts */}
-          <div className="mt-8 pt-6 border-t border-white/10">
-            <p className="text-xs text-white/40 text-center mb-3 font-bold tracking-wider">QUICK ACCESS</p>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => setEmail('admin@mugafi.com')}
-                className="px-3 py-2 bg-void/80 border border-white/20 rounded-lg text-xs text-white/60 hover:text-mugafiPink hover:border-mugafiRed/50 transition-all font-semibold"
-              >
-                ADMIN
-              </button>
-              <button
-                onClick={() => setEmail('creator@mugafi.com')}
-                className="px-3 py-2 bg-void/80 border border-white/20 rounded-lg text-xs text-white/60 hover:text-mugafiPink hover:border-mugafiRed/50 transition-all font-semibold"
-              >
-                CREATOR
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </div>

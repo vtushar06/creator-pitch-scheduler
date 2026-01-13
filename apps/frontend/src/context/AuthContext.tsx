@@ -13,7 +13,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   token: string | null;
-  login: (email: string) => Promise<void>;
+  login: (email: string, password: string, isRegister?: boolean) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -38,9 +38,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(false);
   }, []);
 
-  const login = async (email: string) => {
+  const login = async (email: string, password: string, isRegister = false) => {
     try {
-      const response = await axios.post('/api/auth/login', { email });
+      const endpoint = isRegister ? '/api/auth/register' : '/api/auth/login';
+      const response = await axios.post(endpoint, { email, password });
       const { token: newToken, user: newUser } = response.data.data;
 
       setToken(newToken);
@@ -50,7 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('user', JSON.stringify(newUser));
       axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
     } catch (error) {
-      console.error('Login failed:', error);
+      console.error(isRegister ? 'Registration failed:' : 'Login failed:', error);
       throw error;
     }
   };
