@@ -3,7 +3,11 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { query } from '../config/db';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  throw new Error('FATAL ERROR: JWT_SECRET environment variable is not configured. Application cannot start without a secure JWT secret.');
+}
 const JWT_EXPIRES_IN = '7d';
 const SALT_ROUNDS = 10;
 
