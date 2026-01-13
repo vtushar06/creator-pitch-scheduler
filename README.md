@@ -4,6 +4,14 @@ A full-stack booking application built to handle high concurrency and strict dat
 
 My primary focus was solving the **"Double Booking" problem**—ensuring that if two users click "Book" at the exact same millisecond, only one succeeds, and the system state remains consistent.This isn't just a CRUD app.
 
+## Live Demo & Test Credentials
+The application is deployed and ready to test. You can skip the local setup and use these pre-configured credentials to test the Admin features immediately.
+For User Login, Please Register on portal.
+
+Admin Email: admin@mugafi.com
+
+Admin Password: admin123
+
 ## Tech Stack & Versions
 
 I chose this stack to balance development speed with type safety and performance.
