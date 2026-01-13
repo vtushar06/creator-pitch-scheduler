@@ -42,7 +42,9 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
     }
 
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-    const role = email === 'admin@mugafi.com' ? 'ADMIN' : 'CUSTOMER';
+    // All registrations are CUSTOMER by default
+    // Admin accounts should be created via database seeding or direct DB insertion
+    const role = 'CUSTOMER';
     const userName = name || email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
     const result = await query(

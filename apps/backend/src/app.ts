@@ -32,7 +32,8 @@ app.use(cors({
   credentials: true
 }));
 
-app.use(express.json());
+// Limit request body size to prevent DOS attacks
+app.use(express.json({ limit: '10mb' }));
 
 app.get('/health', async (req: Request, res: Response, next: NextFunction) => {
   try {
