@@ -1,4 +1,6 @@
-version: '3.8'
+# Docker Compose for one-command local development
+# Run: docker-compose up
+# Stop: docker-compose down
 
 services:
   postgres:
@@ -12,12 +14,56 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./packages/db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - ./packages/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./packages/db/add_password_migration.sql:/docker-entrypoint-initdb.d/02-migration.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U pitch_admin -d pitch_db"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile
+    container_name: pitch_backend
+    environment:
+      - DATABASE_URL=postgresql://pitch_admin:pitch_password@postgres:5432/pitch_db
+      - JWT_SECRET=dev-secret-key-change-in-production-12345678
+      - PORT=3000
+      - NODE_ENV=development
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+    # maybe add volume mounting for hot reload?
+    volumes:
+      - ./apps/backend/src:/app/src
+
+  frontend:
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile
+    container_name: pitch_frontend
+    environment:
+      - VITE_API_URL=http://localhost:3000
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    volumes:
+      - ./apps/frontend/src:/app/src
 
 volumes:
   postgres_data:
+
+networks:
+  app-network:
+    driver: bridge
