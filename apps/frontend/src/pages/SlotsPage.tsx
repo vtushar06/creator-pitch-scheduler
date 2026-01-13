@@ -1,5 +1,5 @@
 import { useSlots } from '../hooks/useSlots';
-import { useUrlFilters, TimeWindow } from '../hooks/useUrlFilters';
+import { useUrlFilters, TimeWindow, SortOption } from '../hooks/useUrlFilters';
 import { SlotCard } from '../components/SlotCard';
 import { BookingSummary } from '../components/BookingSummary';
 import { useAuth } from '../context/AuthContext';
@@ -24,19 +24,36 @@ export const SlotsPage = () => {
     toast.success('Logged out successfully');
   };
 
-  // Time window filtering (client-side)
+  // Time window filtering, sorting, and pagination (client-side)
   const filteredSlots = useMemo(() => {
     if (!slots) return [];
-    if (filters.window === 'all') return slots;
-
-    return slots.filter((slot) => {
+    
+    // Filter by time window
+    let filtered = filters.window === 'all' ? slots : slots.filter((slot) => {
       const hour = new Date(slot.start_time).getHours();
       if (filters.window === 'morning') return hour >= 6 && hour < 12;
       if (filters.window === 'afternoon') return hour >= 12 && hour < 17;
       if (filters.window === 'evening') return hour >= 17 && hour < 23;
       return true;
     });
-  }, [slots, filters.window]);
+
+    // Sort by start time
+    filtered = [...filtered].sort((a, b) => {
+      const timeA = new Date(a.start_time).getTime();
+      const timeB = new Date(b.start_time).getTime();
+      return filters.sort === 'earliest' ? timeA - timeB : timeB - timeA;
+    });
+
+    return filtered;
+  }, [slots, filters.window, filters.sort]);
+
+  // Pagination
+  const ITEMS_PER_PAGE = 9;
+  const totalPages = Math.ceil(filteredSlots.length / ITEMS_PER_PAGE);
+  const paginatedSlots = useMemo(() => {
+    const startIdx = (filters.page - 1) * ITEMS_PER_PAGE;
+    return filteredSlots.slice(startIdx, startIdx + ITEMS_PER_PAGE);
+  }, [filteredSlots, filters.page]);
 
   // Pagination helpers
   const handlePreviousDay = () => {
@@ -114,6 +131,26 @@ export const SlotsPage = () => {
                 </svg>
               </button>
             </div>
+          </div>
+
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-white/40 font-bold tracking-wider">SORT BY:</span>
+              <select
+                value={filters.sort}
+                onChange={(e) => setFilters({ sort: e.target.value as SortOption })}
+                className="px-4 py-2 bg-void/50 border border-white/20 rounded-lg text-white text-sm font-semibold focus:ring-2 focus:ring-mugafiRed/50 focus:border-mugafiRed transition-all hover:border-white/40 backdrop-blur-sm"
+              >
+                <option value="earliest">Earliest First</option>
+                <option value="latest">Latest First</option>
+              </select>
+            </div>
+            <button
+              onClick={() => setFilters({ window: 'all', sort: 'earliest', page: 1 })}
+              className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white rounded-lg text-sm font-bold border border-white/10 transition-all"
+            >
+              CLEAR FILTERS
+            </button>
           </div>
 
           <div className="flex items-center space-x-3">
@@ -215,12 +252,54 @@ export const SlotsPage = () => {
           </div>
         )}
 
-        {!isLoading && !isError && filteredSlots && filteredSlots.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredSlots.map((slot) => (
-              <SlotCard key={slot.id} slot={slot} />
-            ))}
-          </div>
+        {!isLoading && !isError && paginatedSlots && paginatedSlots.length > 0 && (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {paginatedSlots.map((slot) => (
+                <SlotCard key={slot.id} slot={slot} />
+              ))}
+            </div>
+
+            {totalPages > 1 && (
+              <div className="mt-12 flex items-center justify-center gap-2">
+                <button
+                  onClick={() => setFilters({ page: filters.page - 1 })}
+                  disabled={filters.page === 1}
+                  className="px-4 py-2 bg-void/50 border border-white/20 rounded-lg text-white/60 hover:text-mugafiRed hover:border-mugafiRed/50 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-white/60 disabled:hover:border-white/20"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+
+                <div className="flex items-center gap-2">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                    <button
+                      key={pageNum}
+                      onClick={() => setFilters({ page: pageNum })}
+                      className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                        filters.page === pageNum
+                          ? 'bg-gradient-to-r from-mugafiRed to-mugafiPink text-white shadow-lg shadow-mugafiRed/40'
+                          : 'bg-void/50 border border-white/20 text-white/60 hover:text-white hover:border-mugafiRed/50'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => setFilters({ page: filters.page + 1 })}
+                  disabled={filters.page === totalPages}
+                  className="px-4 py-2 bg-void/50 border border-white/20 rounded-lg text-white/60 hover:text-mugafiRed hover:border-mugafiRed/50 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-white/60 disabled:hover:border-white/20"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            )}
+          </>
         )}
 
         {!isLoading && !isError && slots && slots.length > 0 && filteredSlots.length === 0 && (

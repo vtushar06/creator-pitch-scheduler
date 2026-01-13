@@ -13,19 +13,8 @@ export const BookingSummary = () => {
     if (!bookings || !filters.date) return [];
     const filtered = bookings.filter((booking) => {
       const bookingDate = new Date(booking.start_time).toISOString().split('T')[0];
-      return bookingDate === filters.date;
-    });
-    console.log('📅 BookingSummary Debug:', {
-      totalBookings: bookings.length,
-      filterDate: filters.date,
-      bookingsForDate: filtered.length,
-      bookings: filtered.map(b => ({
-        id: b.id,
-        mentor_id: b.mentor_id,
-        status: b.booking_status,
-        start_time: b.start_time
-      }))
-    });
+      return bookingDate === filters.date && booking.booking_status === 'BOOKED';
+    }).sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
     return filtered;
   }, [bookings, filters.date]);
 
