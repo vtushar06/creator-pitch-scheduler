@@ -43,14 +43,27 @@ export const BookingSummary = () => {
 
   return (
     <div className="flex lg:fixed lg:right-0 lg:top-0 h-screen w-full lg:w-96 bg-void/80 backdrop-blur-xl lg:border-l border-white/10 p-4 lg:p-8 z-10 mt-16 flex-col">
-      <button onClick={() => navigate(-1)} className="lg:hidden mb-3 flex items-center gap-2 text-white/70 hover:text-white transition-colors">
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+      <button
+        onClick={() => navigate(-1)}
+        className="lg:hidden mb-3 flex items-center gap-2 text-white/70 hover:text-white transition-colors"
+      >
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M15 19l-7-7 7-7"
+          />
         </svg>
         <span className="text-sm font-bold">BACK</span>
       </button>
       <h3 className="text-xl lg:text-2xl font-black text-white tracking-tighter mb-1">
-        TODAY'S BOOKINGS
+        My Booking Summary
       </h3>
       <p className="text-xs text-white/50 font-bold mb-4">
         {formatDate(filters.date)}
@@ -166,7 +179,9 @@ export const BookingSummary = () => {
                 {bookingsForDate.length}
               </p>
               <p className="text-white/60 text-sm font-medium">
-                {bookingsForDate.length === 1 ? "session booked" : "sessions booked"}
+                {bookingsForDate.length === 1
+                  ? "session booked"
+                  : "sessions booked"}
               </p>
             </div>
           </div>
@@ -180,13 +195,23 @@ export const BookingSummary = () => {
               <div className="relative flex-1 min-h-0">
                 {bookingsForDate.length > 2 && (
                   <div className="absolute -right-1 top-4 z-10 flex flex-col items-center animate-bounce">
-                    <svg className="w-5 h-5 text-mugafiPink opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    <svg
+                      className="w-5 h-5 text-mugafiPink opacity-60"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
                     </svg>
                     <div className="w-0.5 h-8 bg-gradient-to-b from-mugafiPink to-transparent mt-1"></div>
                   </div>
                 )}
-                
+
                 <div className="space-y-3 h-full overflow-y-auto pr-2 scroll-smooth">
                   {bookingsForDate.map((booking) => {
                     const m = MENTORS.find(
@@ -200,9 +225,9 @@ export const BookingSummary = () => {
                         <p className="text-white/80 font-bold text-sm line-clamp-1">
                           {m?.name}
                         </p>
-                      <p className="text-white/50 text-xs mt-1">
-                        {formatTime(booking.start_time)}
-                      </p>
+                        <p className="text-white/50 text-xs mt-1">
+                          {formatTime(booking.start_time)}
+                        </p>
                       </div>
                     );
                   })}

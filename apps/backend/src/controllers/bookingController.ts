@@ -255,7 +255,7 @@ export const getMyBookings = async (
       data: result.rows,
     });
   } catch (error) {
-    console.error('❌ Error in getMyBookings:', error);
+    console.error('Error in getMyBookings:', error);
     next(error);
   } finally {
     client.release();
@@ -305,7 +305,7 @@ export const getAllBookings = async (
       data: result.rows,
     });
   } catch (error) {
-    console.error('❌ Error in getAllBookings:', error);
+    console.error('Error in getAllBookings:', error);
     next(error);
   } finally {
     client.release();
