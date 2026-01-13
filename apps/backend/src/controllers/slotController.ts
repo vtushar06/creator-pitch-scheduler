@@ -86,16 +86,20 @@ export const createSlot = async (
   }
 
   try {
+    await client.query("BEGIN");
+
     const overlapCheck = await client.query(
       `SELECT id FROM slots 
        WHERE admin_id = $1 
        AND mentor_id = $2
        AND status != 'CANCELLED'
-       AND tstzrange(start_time, end_time) && tstzrange($3::timestamptz, $4::timestamptz)`,
+       AND tstzrange(start_time, end_time) && tstzrange($3::timestamptz, $4::timestamptz)
+       FOR UPDATE`,
       [adminId, mentorId, startTime, endTime]
     );
 
     if (overlapCheck.rows.length > 0) {
+      await client.query("ROLLBACK");
       return res.status(409).json({
         status: "error",
         message: "This mentor is already assigned to an overlapping time slot",
@@ -109,11 +113,15 @@ export const createSlot = async (
       [adminId, mentorId, startTime, endTime]
     );
 
+    await client.query("COMMIT");
+
     res.status(201).json({
       status: "success",
       data: result.rows[0],
     });
   } catch (error: any) {
+    await client.query("ROLLBACK");
+    
     if (error.code === "23P01") {
       return res.status(409).json({
         status: "error",

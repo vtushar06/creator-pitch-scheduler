@@ -9,15 +9,16 @@ export const createBooking = async (
   const { slot_id } = req.body;
   const userId = req.user?.userId;
 
-  // Generate idempotency key internally for retries
-  const idempotencyKey = req.body.idempotencyKey || `${userId}-${slot_id}-${Date.now()}`;
-
-  if (!slot_id) {
+  // Validate slot_id type and value
+  if (!slot_id || typeof slot_id !== 'number' || !Number.isInteger(slot_id) || slot_id <= 0) {
     return res.status(400).json({
       status: "error",
-      message: "slot_id is required",
+      message: "slot_id must be a positive integer",
     });
   }
+
+  // Generate idempotency key internally for retries
+  const idempotencyKey = req.body.idempotencyKey || `${userId}-${slot_id}-${Date.now()}`;
 
   if (!userId) {
     return res.status(401).json({
