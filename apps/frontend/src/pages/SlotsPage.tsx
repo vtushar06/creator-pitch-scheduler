@@ -24,12 +24,12 @@ export const SlotsPage = () => {
     toast.success('Logged out successfully');
   };
 
-  // Time window filtering, sorting, and pagination (client-side)
-  const filteredSlots = useMemo(() => {
+  // Time window filtering, sorting, and pagination of slots
+  const filteredSlots = useMemo((): typeof slots => {
     if (!slots) return [];
     
     // Filter by time window
-    let filtered = filters.window === 'all' ? slots : slots.filter((slot) => {
+    let filtered = filters.window === 'all' ? slots : slots.filter((slot: any) => {
       const hour = new Date(slot.start_time).getHours();
       if (filters.window === 'morning') return hour >= 6 && hour < 12;
       if (filters.window === 'afternoon') return hour >= 12 && hour < 17;
@@ -49,8 +49,9 @@ export const SlotsPage = () => {
 
   // Pagination
   const ITEMS_PER_PAGE = 9;
-  const totalPages = Math.ceil(filteredSlots.length / ITEMS_PER_PAGE);
+  const totalPages = filteredSlots ? Math.ceil(filteredSlots.length / ITEMS_PER_PAGE) : 0;
   const paginatedSlots = useMemo(() => {
+    if (!filteredSlots) return [];
     const startIdx = (filters.page - 1) * ITEMS_PER_PAGE;
     return filteredSlots.slice(startIdx, startIdx + ITEMS_PER_PAGE);
   }, [filteredSlots, filters.page]);
@@ -298,7 +299,7 @@ export const SlotsPage = () => {
             paginatedSlots.length > 0 && (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {paginatedSlots.map((slot) => (
+                  {paginatedSlots.map((slot: any) => (
                     <SlotCard key={slot.id} slot={slot} />
                   ))}
                 </div>
@@ -370,7 +371,8 @@ export const SlotsPage = () => {
           {!isLoading &&
             !isError &&
             slots &&
-            slots.length > 0 &&
+            (slots as any[]).length > 0 &&
+            filteredSlots &&
             filteredSlots.length === 0 && (
               <div className="text-center py-16">
                 <p className="text-zinc-500">
