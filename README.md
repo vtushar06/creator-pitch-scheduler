@@ -2,7 +2,7 @@
 
 A full-stack booking application built to handle high concurrency and strict data integrity.
 
-This isn't just a CRUD app. My primary focus was solving the **"Double Booking" problem**—ensuring that if two users click "Book" at the exact same millisecond, only one succeeds, and the system state remains consistent.
+My primary focus was solving the **"Double Booking" problem**—ensuring that if two users click "Book" at the exact same millisecond, only one succeeds, and the system state remains consistent.This isn't just a CRUD app.
 
 ## 🛠 Tech Stack & Versions
 
@@ -15,49 +15,205 @@ I chose this stack to balance development speed with type safety and performance
 
 ---
 
-## 🚀 Setup Steps (Local)
+## � Prerequisites
 
-You can run the entire system with one command using Docker.
+Before you start, make sure you have these installed:
 
-**Option 1: Docker (Recommended)**
+* **Node.js:** v18.x or higher ([Download here](https://nodejs.org/))
+* **npm:** v8.x or higher (comes with Node.js)
+* **Docker & Docker Compose:** Latest version (if using Docker setup) ([Download here](https://www.docker.com/))
+* **PostgreSQL:** v15+ (only if running without Docker) ([Download here](https://www.postgresql.org/download/))
+* **Git:** For cloning the repository
 
-1. Clone the repository.
-2. Create your env file: `cp .env.example .env`
-3. Run:
+**Quick version checks:**
+```bash
+node --version   # Should show v18.x or higher
+npm --version    # Should show v8.x or higher
+docker --version # Should show Docker version
+```
+
+---
+
+## 🚀 Complete Setup Guide (For New Users/Forked Repos)
+
+Follow these steps to get the project running on your local machine.
+
+### Step 1: Clone the Repository
+
+```bash
+git clone https://github.com/YOUR_USERNAME/creator-pitch-scheduler.git
+cd creator-pitch-scheduler
+```
+
+### Step 2: Install Dependencies
+
+This is a monorepo structure. Install dependencies from the root:
+
+```bash
+npm install
+```
+
+This will install all dependencies for both backend and frontend.
+
+### Step 3: Configure Environment Variables
+
+Create your local environment file:
+
+```bash
+cp .env.example .env
+```
+
+Now edit the `.env` file with your values:
+
+```env
+# Database connection
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/booking_db
+
+# JWT Secret (generate a secure one using the command below)
+JWT_SECRET=your-secret-here-use-openssl-command-below
+
+# Server config
+PORT=3000
+NODE_ENV=development
+```
+
+**Generate a secure JWT_SECRET:**
+```bash
+openssl rand -base64 32
+```
+Copy the output and paste it as your `JWT_SECRET` value.
+
+### Step 4: Start the Application
+
+**Option A: Docker (Recommended - Easiest)**
+
+This starts everything (PostgreSQL + Backend + Frontend) with one command:
+
 ```bash
 docker-compose up --build
-
 ```
 
+Wait for all services to start. You'll see:
+* ✅ Database initialized
+* ✅ Backend running on port 3000
+* ✅ Frontend running on port 5173
 
-4. Access the app:
-* **Frontend:** `http://localhost:5173`
-* **Backend:** `http://localhost:3000`
-* **DB Admin (Optional):** The database runs on port `5432`.
+**Access the application:**
+* **Frontend:** http://localhost:5173
+* **Backend API:** http://localhost:3000
+* **Database:** localhost:5432 (credentials: postgres/postgres)
 
+**Option B: Manual Setup (Without Docker)**
 
+If you prefer running services individually:
 
-**Option 2: Manual Setup**
+**1. Start PostgreSQL**
+Make sure PostgreSQL is running on your machine.
 
-If you prefer running without Docker:
-
-1. **Database:** Ensure you have PostgreSQL running locally.
-2. **Backend:**
+**2. Create the database:**
 ```bash
-cd backend
-npm install
-npm run migrate  # Seeds the DB schema
-npm run dev
-
+createdb booking_db
 ```
 
-
-3. **Frontend:**
+**3. Run database migrations:**
 ```bash
-cd frontend
-npm install
-npm run dev
+cd apps/backend
+npm run migrate
+```
 
+This will create all tables (users, slots, bookings) with proper constraints.
+
+**4. Start the backend:**
+```bash
+cd apps/backend
+npm run dev
+```
+
+Backend will start on http://localhost:3000
+
+**5. Start the frontend (in a new terminal):**
+```bash
+cd apps/frontend
+npm run dev
+```
+
+Frontend will start on http://localhost:5173
+
+### Step 5: Create Your First Admin User
+
+**The application requires at least one admin to create booking slots.**
+
+**Method 1: Using the Node.js script (recommended)**
+
+```bash
+cd apps/backend
+node -e "
+const bcrypt = require('bcrypt');
+const password = 'AdminPassword123'; // Change this!
+const hash = bcrypt.hashSync(password, 10);
+console.log('\n📋 Copy this SQL and run it in your database:\n');
+console.log(\`INSERT INTO users (name, email, password, role) VALUES ('Admin User', 'admin@example.com', '\${hash}', 'ADMIN');\`);
+"
+```
+
+This will output an SQL INSERT statement. Copy it and run it in your database.
+
+**Using psql:**
+```bash
+psql postgresql://postgres:postgres@localhost:5432/booking_db
+# Paste the INSERT statement
+# Type \q to exit
+```
+
+**Using Docker:**
+```bash
+docker exec -it creator-pitch-scheduler-postgres-1 psql -U postgres -d booking_db
+# Paste the INSERT statement
+# Type \q to exit
+```
+
+**Method 2: Register normally, then promote to admin**
+
+1. Use the frontend to register a new account at http://localhost:5173
+2. Then manually update the role in the database:
+
+```sql
+UPDATE users SET role = 'ADMIN' WHERE email = 'your-email@example.com';
+```
+
+### Step 6: Verify Everything Works
+
+**Test the backend API:**
+```bash
+# Health check
+curl http://localhost:3000/health
+
+# Login with your admin account
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@example.com","password":"AdminPassword123"}'
+```
+
+You should get back a JWT token.
+
+**Test the frontend:**
+1. Open http://localhost:5173 in your browser
+2. Login with your admin credentials
+3. Try creating a booking slot
+
+### Step 7: Run Tests (Optional)
+
+Verify the test suite passes:
+
+```bash
+cd apps/backend
+npm test
+```
+
+You should see:
+```
+Test Suites: 3 passed, 3 total
+Tests:       5 passed, 5 total
 ```
 
 
