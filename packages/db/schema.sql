@@ -1,5 +1,3 @@
--- packages/db/schema.sql
-
 -- Enable GiST for the exclusion constraint
 CREATE EXTENSION IF NOT EXISTS btree_gist;
 
@@ -23,8 +21,8 @@ CREATE TABLE slots (
     status VARCHAR(50) DEFAULT 'AVAILABLE' CHECK (status IN ('AVAILABLE', 'BOOKED', 'CANCELLED')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     
-    -- SENIOR FEATURE: Prevent overlaps at DB level
-    -- Allows same admin to create overlapping slots for different mentors
+    -- Preventing overlaps at DB level
+    -- Allowing same admin to create overlapping slots for different mentors
     CONSTRAINT no_overlap EXCLUDE USING gist (
         admin_id WITH =,
         mentor_id WITH =,
@@ -43,7 +41,6 @@ CREATE TABLE bookings (
     cancelled_at TIMESTAMP WITH TIME ZONE
 );
 
--- FIX: Create the partial unique constraint as a separate INDEX
 -- This ensures a slot can only have ONE "BOOKED" status at a time.
 CREATE UNIQUE INDEX unique_active_booking 
 ON bookings (slot_id) 

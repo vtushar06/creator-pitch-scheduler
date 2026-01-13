@@ -47,7 +47,7 @@ export const createBooking = async (
       await client.query("ROLLBACK");
       return res.status(409).json({
         status: "error",
-        message: "Slot is not available",
+        message: "Someone else just booked this slot",
         currentStatus: slot.status,
       });
     }
@@ -67,7 +67,7 @@ export const createBooking = async (
       await client.query("ROLLBACK");
       return res.status(409).json({
         status: "error",
-        message: "You already have a booking at this time. Please choose a different time slot.",
+        message: "Cannot book at same time. You already have a booking at this time.",
       });
     }
 

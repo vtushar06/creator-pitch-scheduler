@@ -55,11 +55,12 @@ export const useBookSlot = (setConflictError?: (error: string | null) => void) =
       }
 
       if (error.response?.status === 409) {
-        // Set inline error for conflict
+        // Use backend message for inline error
+        const errorMessage = error.response?.data?.message || 'Someone else just booked this slot';
         if (setConflictError) {
-          setConflictError('Someone else just booked this slot');
+          setConflictError(errorMessage);
         }
-        toast.error('This slot is no longer available');
+        toast.error(errorMessage);
       } else {
         toast.error(error.response?.data?.message || 'Failed to book slot');
       }

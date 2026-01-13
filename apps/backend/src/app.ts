@@ -3,20 +3,20 @@ import cors from 'cors';
 import { query } from './config/db';
 import bookingRoutes from './routes/bookingRoutes';
 import slotRoutes from "./routes/slotRoutes";
+import adminRoutes from "./routes/adminRoutes";
 import authRoutes from './routes/authRoutes';
 
 const app = express();
 
 // Configure CORS for production
 const allowedOrigins = [
-  'http://localhost:5173', // Local development
+  'http://localhost:5173', 
   'https://creator-pitch-scheduler-fronten-tushar-vermas-projects-f01f3eda.vercel.app',
-  /^https:\/\/.*\.vercel\.app$/ // Allow all Vercel preview deployments
+  /^https:\/\/.*\.vercel\.app$/ 
 ];
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) return callback(null, true);
     
     const isAllowed = allowedOrigins.some(allowed => 
@@ -48,7 +48,8 @@ app.get('/health', async (req: Request, res: Response, next: NextFunction) => {
 });
 
 app.use('/api/auth', authRoutes);
-app.use('/api/bookings', bookingRoutes); 
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/admin', adminRoutes);
 app.use("/api/slots", slotRoutes);
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {

@@ -167,7 +167,7 @@ export const deleteSlot = async (
         `SELECT b.id as booking_id, b.user_id, u.name as booked_by_name, u.email as booked_by_email
          FROM bookings b
          JOIN users u ON b.user_id = u.id
-         WHERE b.slot_id = $1 AND b.status = 'ACTIVE'`,
+         WHERE b.slot_id = $1 AND b.status = 'BOOKED'`,
         [slotId]
       );
       
