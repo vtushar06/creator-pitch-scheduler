@@ -9,7 +9,7 @@ My primary focus was solving the **"Double Booking" problem**—ensuring that if
 I chose this stack to balance development speed with type safety and performance.
 
 * **Backend:** Node.js (v18.x), Express, TypeScript
-* **Database:** PostgreSQL (v15+) – *Chosen for Row-Level Locking capabilities.*
+* **Database:** PostgreSQL (v15+) 
 * **Frontend:** React (v18), Vite, TanStack Query, Tailwind CSS
 * **Containerization:** Docker & Docker Compose
 
@@ -143,43 +143,126 @@ Frontend will start on http://localhost:5173
 
 **The application requires at least one admin to create booking slots.**
 
-**Method 1: Using the Node.js script (recommended)**
+**Before you start:** Make sure you completed Step 2 (`npm install`) and Step 4 (Docker containers are running).
 
+**Quick Check:**
+```bash
+# Verify Docker containers are running
+docker ps --filter "name=postgres"
+
+# You should see the postgres container with status "Up"
+```
+
+---
+
+**Method 1: Simplified Two-Step Setup (Docker Users - Recommended)**
+
+**Step 1:** Generate the admin user SQL
 ```bash
 cd apps/backend
-node -e "
-const bcrypt = require('bcrypt');
-const password = 'AdminPassword123'; // Change this!
-const hash = bcrypt.hashSync(password, 10);
-console.log('\n📋 Copy this SQL and run it in your database:\n');
-console.log(\`INSERT INTO users (name, email, password, role) VALUES ('Admin User', 'admin@example.com', '\${hash}', 'ADMIN');\`);
-"
+node -e "const bcrypt = require('bcrypt'); const hash = bcrypt.hashSync('AdminPassword123', 10); console.log(\`INSERT INTO users (name, email, password, role) VALUES ('Admin User', 'admin@example.com', '\${hash}', 'ADMIN') ON CONFLICT (email) DO NOTHING;\`);"
 ```
 
-This will output an SQL INSERT statement. Copy it and run it in your database.
+💡 **Change `'AdminPassword123'` to your desired password before running!**
 
-**Using psql:**
+This outputs a SQL INSERT statement. Copy it.
+
+**Step 2:** Run the SQL in your database
+```bash
+docker exec -i $(docker ps -qf "name=postgres") psql -U postgres -d booking_db
+```
+
+This opens a psql prompt. Paste your SQL statement and press Enter. Type `\q` to exit.
+
+**Expected output:**
+```
+INSERT 0 1
+```
+This means 1 row was inserted successfully!
+
+**Verify it worked:**
+```bash
+docker exec -i $(docker ps -qf "name=postgres") psql -U postgres -d booking_db -c "SELECT name, email, role FROM users WHERE role='ADMIN';"
+```
+
+You should see:
+```
+     name     |       email        | role  
+--------------+-------------------+-------
+ Admin User   | admin@example.com | ADMIN
+```
+
+✅ **Success!** You can now login with:
+- Email: `admin@example.com`
+- Password: `AdminPassword123` (or whatever you set)
+
+---
+
+**Method 2: Manual Setup (Non-Docker Users)**
+
+**Step 2.1: Generate the password hash**
+```bash
+cd apps/backend
+node -e "const bcrypt = require('bcrypt'); const password = 'YourPassword123'; console.log(bcrypt.hashSync(password, 10));"
+```
+
+Copy the hash output (starts with `$2b$10$...`)
+
+**Step 2.2: Insert into database**
 ```bash
 psql postgresql://postgres:postgres@localhost:5432/booking_db
-# Paste the INSERT statement
-# Type \q to exit
 ```
 
-**Using Docker:**
-```bash
-docker exec -it creator-pitch-scheduler-postgres-1 psql -U postgres -d booking_db
-# Paste the INSERT statement
-# Type \q to exit
-```
-
-**Method 2: Register normally, then promote to admin**
-
-1. Use the frontend to register a new account at http://localhost:5173
-2. Then manually update the role in the database:
-
+Then run this SQL (replace `PASTE_HASH_HERE` with your copied hash):
 ```sql
-UPDATE users SET role = 'ADMIN' WHERE email = 'your-email@example.com';
+INSERT INTO users (name, email, password, role) 
+VALUES ('Admin User', 'admin@example.com', 'PASTE_HASH_HERE', 'ADMIN');
 ```
+
+Type `\q` to exit psql.
+
+---
+
+**Method 3: Register via Frontend, Then Promote**
+
+This is useful if you want to test the registration flow first:
+
+1. Open http://localhost:5173 and register a new account
+2. Then promote that user to admin in the database:
+
+**Docker:**
+```bash
+docker exec -i $(docker ps -qf "name=postgres") psql -U postgres -d booking_db -c "UPDATE users SET role = 'ADMIN' WHERE email = 'your-email@example.com';"
+```
+
+**Non-Docker:**
+```bash
+psql postgresql://postgres:postgres@localhost:5432/booking_db -c "UPDATE users SET role = 'ADMIN' WHERE email = 'your-email@example.com';"
+```
+
+---
+
+**🔍 Troubleshooting Admin Creation**
+
+**Container name not found?** 
+Find your actual container name:
+```bash
+docker ps --filter "name=postgres"
+```
+Then use the exact name in the docker exec command.
+
+**bcrypt module not found?**
+Make sure you ran `npm install` first:
+```bash
+cd apps/backend && npm install
+```
+
+**"duplicate key value violates unique constraint"?**
+Admin already exists! Try logging in with the existing credentials, or delete and recreate:
+```bash
+docker exec -i $(docker ps -qf "name=postgres") psql -U postgres -d booking_db -c "DELETE FROM users WHERE email='admin@example.com';"
+```
+Then run the admin creation command again.
 
 ### Step 6: Verify Everything Works
 
@@ -299,9 +382,3 @@ I implemented a **State Machine** approach rather than deleting data.
 * **Why:** This preserves the audit trail. We can see *who* cancelled and *when*, which is crucial for real-world admin disputes.
 
 ---
-
-## ⚠️ Known Limitations & Future Improvements
-
-1. **Pagination:** Currently, the `GET /slots` endpoint returns all data. For a production app, I would add `limit` and `offset` parameters to handle thousands of records.
-2. **Notification System:** The assignment didn't ask for it, but in a real app, I'd integrate a job queue (like BullMQ) to send email confirmations asynchronously so the HTTP request remains fast.
-3. **Timezones:** I store everything in UTC (best practice), but the frontend simply converts to the user's browser local time. A more robust system might allow users to pick their display timezone.
