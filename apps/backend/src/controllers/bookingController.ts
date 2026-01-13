@@ -6,13 +6,16 @@ export const createBooking = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { slotId, idempotencyKey } = req.body;
+  const { slot_id } = req.body;
   const userId = req.user?.userId;
 
-  if (!slotId || !idempotencyKey) {
+  // Generate idempotency key internally for retries
+  const idempotencyKey = req.body.idempotencyKey || `${userId}-${slot_id}-${Date.now()}`;
+
+  if (!slot_id) {
     return res.status(400).json({
       status: "error",
-      message: "slotId and idempotencyKey are required",
+      message: "slot_id is required",
     });
   }
 
@@ -30,7 +33,7 @@ export const createBooking = async (
 
     const slotResult = await client.query(
       "SELECT * FROM slots WHERE id = $1 FOR UPDATE",
-      [slotId]
+      [slot_id]
     );
 
     if (slotResult.rows.length === 0) {
@@ -75,11 +78,11 @@ export const createBooking = async (
       `INSERT INTO bookings (slot_id, user_id, idempotency_key, status, created_at)
        VALUES ($1, $2, $3, 'BOOKED', NOW())
        RETURNING *`,
-      [slotId, userId, idempotencyKey]
+      [slot_id, userId, idempotencyKey]
     );
 
     await client.query(`UPDATE slots SET status = 'BOOKED' WHERE id = $1`, [
-      slotId,
+      slot_id,
     ]);
 
     await client.query("COMMIT");

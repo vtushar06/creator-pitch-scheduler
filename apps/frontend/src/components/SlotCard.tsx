@@ -31,7 +31,7 @@ export const SlotCard: React.FC<SlotCardProps> = ({ slot }: SlotCardProps) => {
     setConflictError(null);
     const idempotencyKey = `${user.id}-${slot.id}-${Date.now()}`;
     bookSlot({
-      slotId: slot.id,
+      slot_id: slot.id,
       idempotencyKey,
     });
   };

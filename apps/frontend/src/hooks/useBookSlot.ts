@@ -5,8 +5,8 @@ import { Slot } from './useSlots';
 import { useUrlFilters } from './useUrlFilters';
 
 interface BookSlotRequest {
-  slotId: number;
-  idempotencyKey: string;
+  slot_id: number;
+  idempotencyKey?: string;
 }
 
 interface BookSlotResponse {
@@ -39,7 +39,7 @@ export const useBookSlot = (setConflictError?: (error: string | null) => void) =
       queryClient.setQueryData<Slot[]>(queryKey, (old: Slot[] | undefined) => {
         if (!old) return old;
         return old.map((slot: Slot) => 
-          slot.id === variables.slotId 
+          slot.id === variables.slot_id 
             ? { ...slot, status: 'BOOKED' as const }
             : slot
         );
